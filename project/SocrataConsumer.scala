@@ -9,5 +9,7 @@ object SocrataConsumer {
   )
 
   def libraries(implicit scalaVersion: String) = Seq(
+    asyncHttpClient,
+    rojomaJson
   )
 }

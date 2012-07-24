@@ -9,6 +9,7 @@ object SocrataSample {
   )
 
   def libraries(implicit scalaVersion: String) = Seq(
+    rojomaJson,
     slf4jSimple
   )
 }
