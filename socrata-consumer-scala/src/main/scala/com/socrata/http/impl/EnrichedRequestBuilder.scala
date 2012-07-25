@@ -13,7 +13,13 @@ class EnrichedRequestBuilder[T <: RequestBuilderBase[T]](b: T) {
       case NoAuth =>
         b
       case BasicAuth(username, pwd, appToken) =>
-        b.setRealm(new RealmBuilder().setScheme(Realm.AuthScheme.BASIC).setPrincipal(username).setPassword(pwd).build).addHeader("X-App-Token", appToken)
+        val realm = new RealmBuilder().
+          setScheme(Realm.AuthScheme.BASIC).
+          setPrincipal(username).
+          setPassword(pwd).
+          setUsePreemptiveAuth(true).
+          build()
+        b.setRealm(realm).addHeader("X-App-Token", appToken)
     }
 
   def setQueryParametersS(params: Map[String, Seq[String]]) =
