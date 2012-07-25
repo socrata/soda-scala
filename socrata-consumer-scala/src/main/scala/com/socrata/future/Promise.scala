@@ -16,7 +16,17 @@ class Promise[A] { self =>
       listeners = Nil
       go
     }
-    wereWaiting.foreach(_(result))
+    wereWaiting.foreach(executeOnResult)
+  }
+
+  private def executeOnResult(listener: Either[Throwable, A] => _) {
+    try {
+      listener(result)
+    } catch {
+      case t: Throwable =>
+        // FIXME something more than this
+        t.printStackTrace()
+    }
   }
 
   def future: Future[A] = new Future[A] {
@@ -29,7 +39,7 @@ class Promise[A] { self =>
           true
         }
       }
-      if(goNow) res(self.result)
+      if(goNow) executeOnResult(res)
     }
 
     def result(): Option[A] = {
