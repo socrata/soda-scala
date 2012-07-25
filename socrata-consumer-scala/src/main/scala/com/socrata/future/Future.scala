@@ -1,5 +1,7 @@
 package com.socrata.future
 
+import impl.{SimpleValueFuture, SimpleFailureFuture}
+
 object Future {
   def apply[A](a: =>A)(implicit execService: ExecutionContext): Future[A] = {
     execService.execute(a)
