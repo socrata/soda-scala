@@ -24,4 +24,7 @@ class EnrichedRequestBuilder[T <: RequestBuilderBase[T]](b: T) {
 
   def setQueryParametersS(params: Map[String, Seq[String]]) =
     b.setQueryParameters(new FluentStringsMap(params.mapValues(_.asJavaCollection).asJava))
+
+  def maybeSetQueryParametersS(params: Option[Map[String, Seq[String]]]) =
+    params.map(setQueryParametersS).getOrElse(b)
 }

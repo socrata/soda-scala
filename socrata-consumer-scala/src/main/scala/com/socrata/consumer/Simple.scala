@@ -4,10 +4,10 @@ import com.socrata.future.Future
 import com.socrata.iteratee._
 
 class Simple(val lowLevel: LowLevel) {
-  def query(resource: Resource, getParameters: Map[String, String]) = new SimpleQuery(lowLevel, resource, getParameters)
+  def query(resource: Resource, getParameters: Map[String, String]) = new SimpleQuery(lowLevel, "/id/" + resource.name, getParameters)
 }
 
-class SimpleQuery(lowLevel: LowLevel, resource: Resource, getParameters: Map[String, String]) {
+class SimpleQuery(lowLevel: LowLevel, resource: String, getParameters: Map[String, String]) {
   def iterate[T](iteratee: Iteratee[Row, T]): Future[T] =
     lowLevel.execute(resource, getParameters, new CharJArrayElementEnumeratee(new JValueRowEnumeratee(iteratee)))
 

@@ -20,7 +20,7 @@ private[http] object WrappedFuture {
             promise.break(e)
         }
       }
-    }, exeuctionContext.executor)
+    }, exeuctionContext.asJava)
     promise.future
   }
 }

@@ -3,6 +3,7 @@ package com.socrata.consumer.http
 import com.ning.http.client.AsyncHttpClient
 
 import com.socrata.consumer.Simple
+import com.socrata.future.ExecutionContext
 import com.socrata.http.{Authorization, NoAuth}
 import com.socrata.future.ExecutionContext
 

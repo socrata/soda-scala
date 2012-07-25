@@ -2,21 +2,10 @@ package com.socrata.future
 
 object Future {
   def apply[A](a: =>A)(implicit execService: ExecutionContext): Future[A] = {
-    val promise = new Promise[A]
-    execService.executor.execute(new Runnable {
-      def run() {
-        try {
-          promise.fulfill(a)
-        } catch {
-          case e: Throwable =>
-            promise.break(e)
-        }
-      }
-    })
-    promise.future
+    execService.execute(a)
   }
 
-  private def now[A](value: =>A): Future[A] = try {
+  def now[A](value: =>A): Future[A] = try {
     new SimpleValueFuture(value)
   } catch {
     case e: Throwable =>
@@ -38,6 +27,8 @@ trait Future[+A] {
     case Left(e) => f(e)
     case _ => // nothing
   }
+
+  def flatten[B](implicit ev: A => Future[B]): Future[B] = flatMap { x => x }
 
   def flatMap[B](f: A => Future[B]): Future[B] = {
     val promise = new Promise[B]
