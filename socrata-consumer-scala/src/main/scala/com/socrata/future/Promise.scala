@@ -11,6 +11,7 @@ class Promise[A] { self =>
 
   private def setResult(r: Either[Throwable, A]) {
     val wereWaiting = synchronized {
+      if(result != null) throw new IllegalStateException("Promise has already been fulfilled or broken.")
       result = r
       val go = listeners
       listeners = Nil
