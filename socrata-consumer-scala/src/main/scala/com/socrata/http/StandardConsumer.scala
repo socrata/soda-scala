@@ -2,11 +2,17 @@ package com.socrata.http
 
 import scala.io.Codec
 
-import com.rojoma.json.ast.JObject
-
 import com.socrata.future.ExecutionContext
 import com.socrata.http.impl.{OKHeadersConsumer, AcceptedHeadersConsumer}
 
+/** A functoin that produces a state machine that understands the HTTP envelope of a SODA2
+ * request.  This handles converting errors into exceptions and manages the details of
+ * retrying long-running requests.
+ *
+ * @param bodyConsumer The bodyConsumer to be used in the event that the request succeeds at the HTTP level.
+ * @param defaultRetryAfter The timeout in seconds to use if a 202 response is received with no suggested timeout value.
+ * @param execContext A strategy for launching worker asynchronous worker threads.
+ */
 class StandardConsumer[T](bodyConsumer: Codec => BodyConsumer[T], defaultRetryAfter: Int = 60)(implicit execContext: ExecutionContext) extends StatusConsumer[Retryable[T]] {
   def apply(status: Status): Either[HeadersConsumer[Retryable[T]], Retryable[T]] = {
     if(status.isSuccess) success(status)

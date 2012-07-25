@@ -6,6 +6,10 @@ import com.ning.http.client.AsyncHttpClient
 import com.socrata.future.{ExecutionContext, Future}
 
 class EnrichedBoundRequestBuilder(b: AsyncHttpClient#BoundRequestBuilder) {
+  /** Build the request and send it off to an HTTP server.
+   *
+   * @param consumer The entry point into the state machine managed by a [[com.socrata.http.NiceAsyncHandler]]
+   * @param executionContext A strategy for starting tasks asynchronously. */
   def makeRequest[T](consumer: StatusConsumer[T])(implicit executionContext: ExecutionContext): Future[T] = {
     WrappedFuture(b.execute(new NiceAsyncHandler(consumer)))
   }

@@ -4,6 +4,11 @@ import scala.collection.JavaConverters._
 
 import com.ning.http.client.{HttpResponseBodyPart, HttpResponseHeaders, HttpResponseStatus, AsyncHandler}
 
+/** An [[com.ning.http.client.AsyncHandler]] which uses functions to represent the
+ * state-transitions in processing an HTTP result.
+ *
+ * @param consumer The initial state of the machine.
+ */
 class NiceAsyncHandler[T](consumer: StatusConsumer[T]) extends AsyncHandler[T] {
   private var statusConsumer: StatusConsumer[T] = consumer
   private var headersConsumer: HeadersConsumer[T] = null

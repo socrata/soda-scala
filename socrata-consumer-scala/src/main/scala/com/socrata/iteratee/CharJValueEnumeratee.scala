@@ -6,7 +6,12 @@ import com.rojoma.json
 import json.ast._
 import json.util.{JValueProducer, WrappedCharArray}
 
+/** An [[com.socrata.iteratee.Iteratee]] (actually an Enumeratee) that reads a JSON data out of the stream of
+ * [[com.rojoma.json.util.WrappedCharArray]]s which it consumes, and passes them on to a secondary
+ * [[com.socrata.iteratee.Iteratee]] for further processing, throwing exceptions if the data is not well-formed.
+ */
 class CharJValueEnumeratee[T](valueProducer: JValueProducer, iteratee: Iteratee[JValue, T]) extends CharIteratee[T] {
+  /** Constructs a new `CharJValueEnumeratee` with the given secondary [[com.socrata.iteratee.Iteratee]]. */
   def this(iteratee: Iteratee[JValue, T]) = this(JValueProducer.newProducer, iteratee)
 
   def process(input: WrappedCharArray): Either[CharIteratee[T], T] = {

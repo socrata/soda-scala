@@ -2,11 +2,21 @@ package com.socrata.future
 
 import java.util.concurrent.CountDownLatch
 
+/** An object that represents the promise to produce a result
+ * at some point in the future. */
 class Promise[A] { self =>
   private var listeners: List[Either[Throwable, A] => _] = Nil
   private var result: Either[Throwable, A] = _
 
+  /** Break the promise by setting the result to an exception to be
+   * re-thrown when the promise is demanded.
+   *
+   * @throws IllegalStateException if the promise has already been fulfilled or broken. */
   def break(err: Throwable) { setResult(Left(err)) }
+
+  /**Fulfill the promise by setting the result to the given value.
+   *
+   * @throws IllegalStateException if the promise has already been fulfilled or broken. */
   def fulfill(result: A) { setResult(Right(result)) }
 
   private def setResult(r: Either[Throwable, A]) {
@@ -30,6 +40,7 @@ class Promise[A] { self =>
     }
   }
 
+  /** A [[com.socrata.future.Future]] which can be used to access the result of this promise. */
   val future: Future[A] = new Future[A] {
     def onComplete[B](res: Either[Throwable, A] => B) {
       val goNow = self.synchronized {
