@@ -1,5 +1,4 @@
-package com.socrata
-package consumer
+package com.socrata.consumer
 
 import com.rojoma.json.ast.{JObject, JValue}
 

@@ -1,9 +1,8 @@
-package com.socrata
-package consumer
+package com.socrata.consumer
 
 import com.rojoma.json.ast._
 
-import iteratee.Iteratee
+import com.socrata.iteratee.Iteratee
 
 class JValueRowEnumeratee[T](iteratee: Iteratee[Row, T]) extends Iteratee[JValue, T] {
   def process(value: JValue) = value match {

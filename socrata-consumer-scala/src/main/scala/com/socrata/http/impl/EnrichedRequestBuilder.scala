@@ -1,9 +1,9 @@
-package com.socrata
-package `consumer-impl`
+package com.socrata.http.impl
 
 import com.ning.http.client.{RequestBuilderBase, Realm}
 import com.ning.http.client.Realm.RealmBuilder
-import com.socrata.consumer.{Authorization, NoAuth, BasicAuth}
+
+import com.socrata.http.{Authorization, NoAuth, BasicAuth}
 
 class EnrichedRequestBuilder[T <: RequestBuilderBase[T]](b: T) {
   def authorize(auth: Authorization): T =

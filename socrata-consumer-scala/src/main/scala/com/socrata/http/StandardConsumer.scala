@@ -1,12 +1,10 @@
-package com.socrata
-package http
+package com.socrata.http
 
 import scala.{collection => sc}
 import scala.io.Codec
+
 import java.nio.charset.CodingErrorAction
 import javax.activation.MimeType
-
-import consumer.Authorization
 
 import com.ning.http.client.RequestBuilderBase
 

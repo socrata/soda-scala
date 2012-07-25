@@ -1,5 +1,4 @@
-package com.socrata
-package iteratee
+package com.socrata.iteratee
 
 import scala.io.Codec
 

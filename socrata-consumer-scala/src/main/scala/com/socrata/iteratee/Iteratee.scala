@@ -1,5 +1,4 @@
-package com.socrata
-package iteratee
+package com.socrata.iteratee
 
 trait Iteratee[-I, +O] {
   def process(input: I): Either[Iteratee[I, O], O]

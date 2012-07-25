@@ -1,14 +1,13 @@
-package com.socrata
-package `consumer-impl`
+package com.socrata.http
 
 import scala.collection.JavaConverters._
 
 import com.ning.http.client.{HttpResponseBodyPart, HttpResponseHeaders, HttpResponseStatus, AsyncHandler}
 
-class NiceAsyncHandler[T](consumer: http.StatusConsumer[T]) extends AsyncHandler[T] {
-  private var statusConsumer: http.StatusConsumer[T] = consumer
-  private var headersConsumer: http.HeadersConsumer[T] = null
-  private var bodyConsumer: http.BodyConsumer[T] = null
+class NiceAsyncHandler[T](consumer: StatusConsumer[T]) extends AsyncHandler[T] {
+  private var statusConsumer: StatusConsumer[T] = consumer
+  private var headersConsumer: HeadersConsumer[T] = null
+  private var bodyConsumer: BodyConsumer[T] = null
 
   private var result: Either[Throwable, T] = null
 
@@ -25,7 +24,7 @@ class NiceAsyncHandler[T](consumer: http.StatusConsumer[T]) extends AsyncHandler
     // care about.
     if(100 <= status.getStatusCode && status.getStatusCode <= 199) return AsyncHandler.STATE.CONTINUE
 
-    val statusResult = statusConsumer(http.Status(status.getStatusCode, status.getStatusText, status.getProtocolName, status.getProtocolMajorVersion, status.getProtocolMinorVersion))
+    val statusResult = statusConsumer(Status(status.getStatusCode, status.getStatusText, status.getProtocolName, status.getProtocolMajorVersion, status.getProtocolMinorVersion))
 
     statusConsumer = null
 

@@ -1,8 +1,7 @@
-package com.socrata
-package consumer
+package com.socrata.consumer
 
-import future.Future
-import iteratee._
+import com.socrata.future.Future
+import com.socrata.iteratee._
 
 class Simple(val lowLevel: LowLevel) {
   def query(resource: Resource, getParameters: Map[String, String]) = new SimpleQuery(lowLevel, resource, getParameters)

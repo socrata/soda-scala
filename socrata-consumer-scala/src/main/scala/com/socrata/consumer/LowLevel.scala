@@ -1,10 +1,8 @@
-package com.socrata
-package consumer
+package com.socrata.consumer
 
-import `consumer-impl`._
-
-import iteratee.CharIteratee
-import future.Future
+import com.socrata.consumer.impl.QueryDisambiguator
+import com.socrata.future.Future
+import com.socrata.iteratee.CharIteratee
 
 trait LowLevel {
   def execute[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: CharIteratee[T]): Future[T]

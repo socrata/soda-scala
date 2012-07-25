@@ -1,5 +1,4 @@
-package com.socrata
-package http
+package com.socrata.http
 
 case class Status(code: Int, text: String, protocol: String, majorVersion: Int, minorVersion: Int) {
   def isSuccess = 200 <= code && code <= 299

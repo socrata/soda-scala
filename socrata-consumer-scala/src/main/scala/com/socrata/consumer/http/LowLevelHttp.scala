@@ -1,6 +1,4 @@
-package com.socrata
-package consumer
-package http
+package com.socrata.consumer.http
 
 import scala.io.Codec
 
@@ -8,10 +6,11 @@ import java.net.{URL, URLEncoder}
 
 import com.ning.http.client.AsyncHttpClient
 
-import `consumer-impl`.implicits._
-import com.socrata.http.{StandardConsumer, BodyConsumer, Retryable}
-import iteratee.CharIteratee
-import future.Future
+import com.socrata.consumer.{LowLevel, Resource, RowProducer}
+import com.socrata.future.Future
+import com.socrata.http.implicits._
+import com.socrata.http.{StandardConsumer, Retryable, Authorization}
+import com.socrata.iteratee.CharIteratee
 
 class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int, val authorization: Authorization) extends LowLevel {
   import LowLevelHttp._

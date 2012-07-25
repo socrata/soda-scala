@@ -1,4 +1,4 @@
-package com.socrata.consumer
+package com.socrata.http
 
 sealed abstract class Authorization
 

@@ -1,10 +1,9 @@
-package com.socrata
-package consumer
+package com.socrata.consumer
 
 import scala.io.Codec
 
 import com.socrata.http.BodyConsumer
-import iteratee._
+import com.socrata.iteratee.{ByteCharEnumeratee, ByteIteratee, CharIteratee}
 
 private[consumer] class RowProducer[T](iteratee: ByteIteratee[T]) extends BodyConsumer[T] {
   def this(codec: Codec, iteratee: CharIteratee[T]) = this(new ByteCharEnumeratee(codec, iteratee))

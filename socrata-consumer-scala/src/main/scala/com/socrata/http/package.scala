@@ -1,7 +1,6 @@
 package com.socrata
 
 import scala.{collection => sc}
-import com.ning.http.client.HttpResponseStatus
 
 package object http {
   type StatusConsumer[T] = Status => Either[HeadersConsumer[T], T]
