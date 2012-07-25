@@ -7,12 +7,12 @@ import java.net.{URL, URLEncoder}
 import com.ning.http.client.AsyncHttpClient
 
 import com.socrata.consumer.{LowLevel, Resource, RowProducer}
-import com.socrata.future.Future
+import com.socrata.future.{ExecutionContext, Future}
 import com.socrata.http.implicits._
 import com.socrata.http.{StandardConsumer, Retryable, Authorization}
 import com.socrata.iteratee.CharIteratee
 
-class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int, val authorization: Authorization) extends LowLevel {
+class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int, val authorization: Authorization)(implicit executionContext: ExecutionContext) extends LowLevel {
   import LowLevelHttp._
 
   def execute[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: CharIteratee[T]): Future[T] = {

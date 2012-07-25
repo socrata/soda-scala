@@ -2,10 +2,12 @@ package com.socrata
 package consumer
 package sample
 
-import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
-
-import com.rojoma.json.ast.JValue
 import javax.net.ssl.SSLContext
+
+import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
+import com.rojoma.json.ast.JValue
+
+import com.socrata.future.ExecutionContext.implicits._
 
 object SimpleQuery {
   def main(args: Array[String]) {

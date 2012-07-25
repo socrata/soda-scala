@@ -7,10 +7,12 @@ trait ExecutionContext {
 }
 
 object ExecutionContext {
-  implicit val defaultExecutionContext = new ExecutionContext {
-    val executor = new Executor {
-      def execute(command: Runnable) {
-        command.run()
+  object implicits {
+    implicit val defaultExecutionContext = new ExecutionContext {
+      val executor = new Executor {
+        def execute(command: Runnable) {
+          command.run()
+        }
       }
     }
   }
