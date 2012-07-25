@@ -30,7 +30,7 @@ class Promise[A] { self =>
     }
   }
 
-  def future: Future[A] = new Future[A] {
+  val future: Future[A] = new Future[A] {
     def onComplete[B](res: Either[Throwable, A] => B) {
       val goNow = self.synchronized {
         if(self.result == null) {
