@@ -29,6 +29,16 @@ trait Future[+A] {
   def result(): Option[A]
   def await()
 
+  def onSuccess[U](f: A => U) = onComplete {
+    case Right(a) => f(a)
+    case _ => // nothing
+  }
+
+  def onFailure[U](f: Throwable => U) = onComplete {
+    case Left(e) => f(e)
+    case _ => // nothing
+  }
+
   def flatMap[B](f: A => Future[B]): Future[B] = {
     val promise = new Promise[B]
 
