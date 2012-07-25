@@ -34,21 +34,17 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
     case Right(result) =>
       Future.now(result)
     case Left(newRequest) =>
-      // TODO: some sort of progress based on newRequest.body
-      newRequest match {
-        case Retry(_) =>
-          executionContext.in(NewRequest.defaultRetryAfter) {
+      // TODO: some sort of progress based on newRequest.details
+      executionContext.in(newRequest.retryAfter) {
+        newRequest match {
+          case Retry(_, _) =>
             execute(resource, getParameters, iteratee)
-          }.flatten
-        case RetryWithTicket(ticket, _) =>
-          executionContext.in(NewRequest.defaultRetryAfter) {
+          case RetryWithTicket(ticket, _, _) =>
             execute(resource, getParameters + ("ticket" -> Seq(ticket)), iteratee)
-          }.flatten
-        case Redirect(url, after, _) =>
-          executionContext.in(after) {
+          case Redirect(url, _, _) =>
             val target = urlForResource(resource).toURI.resolve(url).toURL.toString
             doGet(target, None, iteratee).flatMap(maybeRetry(resource, getParameters, iteratee, _))
-          }.flatten
-      }
+        }
+      }.flatten
   }
 }

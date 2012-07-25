@@ -6,13 +6,13 @@ import com.rojoma.json.ast.{JString, JObject, JValue}
 
 import HeadersConsumerUtils._
 
-object AcceptedHeadersConsumer extends HeadersConsumer[Retryable[Nothing]] {
+class AcceptedHeadersConsumer(defaultRetryAfter: Int) extends HeadersConsumer[Retryable[Nothing]] {
   def apply(headers: sc.Map[String, Seq[String]]): Left[BodyConsumer[Retryable[Nothing]], Nothing] = {
     jsonCodec(headers) match {
       case Some(codec) =>
         headers.get("X-SODA2-Location").map(_.last) match {
           case Some(url) =>
-            val retryAfter = headers.get("X-SODA2-Retry-After").map(_.last).map(_.toInt).getOrElse(NewRequest.defaultRetryAfter)
+            val retryAfter = headers.get("X-SODA2-Retry-After").map(_.last).map(_.toInt).getOrElse(defaultRetryAfter)
             Left(new SingleJValueBodyConsumer(codec).map(new202(url, retryAfter, _)))
           case None =>
             // legacy; have to read a JSON object and see if there's a token in it
@@ -42,11 +42,11 @@ object AcceptedHeadersConsumer extends HeadersConsumer[Retryable[Nothing]] {
       val details = extractDetails(body)
       val action = fields.get("ticket") match {
         case Some(JString(ticket)) =>
-          RetryWithTicket(ticket, details)
+          RetryWithTicket(ticket, defaultRetryAfter, details)
         case Some(_) =>
           error("NYI") // protocol error
         case None =>
-          Retry(details)
+          Retry(defaultRetryAfter, details)
       }
       Left(action)
     case _ =>
