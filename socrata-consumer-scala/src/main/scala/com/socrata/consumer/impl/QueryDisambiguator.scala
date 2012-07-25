@@ -1,4 +1,5 @@
-package com.socrata.consumer.impl
+package com.socrata.consumer
+package impl
 
 class QueryDisambiguator
 

@@ -1,4 +1,5 @@
-package com.socrata.http.impl
+package com.socrata.http
+package impl
 
 import java.util.concurrent.ExecutionException
 

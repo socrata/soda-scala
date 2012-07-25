@@ -5,6 +5,7 @@ import scala.io.Codec
 import com.rojoma.json.ast.JObject
 
 import com.socrata.future.ExecutionContext
+import com.socrata.http.impl.{OKHeadersConsumer, AcceptedHeadersConsumer}
 
 class StandardConsumer[T](bodyConsumer: Codec => BodyConsumer[T], defaultRetryAfter: Int = 60)(implicit execContext: ExecutionContext) extends StatusConsumer[Retryable[T]] {
   def apply(status: Status): Either[HeadersConsumer[Retryable[T]], Retryable[T]] = {
@@ -48,21 +49,3 @@ class StandardConsumer[T](bodyConsumer: Codec => BodyConsumer[T], defaultRetryAf
     error("NYI")
   }
 }
-
-class WrappedBodyConsumer[T](underlying: BodyConsumer[T]) extends BodyConsumer[Retryable[T]] {
-  def apply(bytes: Array[Byte], isLast: Boolean) =
-    underlying(bytes, isLast) match {
-      case Left(bc) =>
-        Left(new WrappedBodyConsumer(bc))
-      case Right(v) =>
-        Right(Right(v))
-    }
-}
-
-sealed abstract class NewRequest {
-  def retryAfter: Int
-  def details: JObject
-}
-case class Retry(retryAfter: Int, details: JObject) extends NewRequest
-case class Redirect(newUrl: String, retryAfter: Int,  details: JObject) extends NewRequest
-case class RetryWithTicket(ticket: String, retryAfter: Int, details: JObject) extends NewRequest

@@ -1,11 +1,10 @@
-package com.socrata.http.impl
+package com.socrata.http
+package impl
 
 import scala.collection.JavaConverters._
 
 import com.ning.http.client.{FluentStringsMap, Realm, RequestBuilderBase}
 import com.ning.http.client.Realm.RealmBuilder
-
-import com.socrata.http.{Authorization, NoAuth, BasicAuth}
 
 class EnrichedRequestBuilder[T <: RequestBuilderBase[T]](b: T) {
   def authorize(auth: Authorization): T =

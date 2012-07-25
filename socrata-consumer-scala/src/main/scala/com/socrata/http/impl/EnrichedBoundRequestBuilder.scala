@@ -1,8 +1,8 @@
-package com.socrata.http.impl
+package com.socrata.http
+package impl
 
 import com.ning.http.client.AsyncHttpClient
 
-import com.socrata.http.{StatusConsumer, NiceAsyncHandler}
 import com.socrata.future.{ExecutionContext, Future}
 
 class EnrichedBoundRequestBuilder(b: AsyncHttpClient#BoundRequestBuilder) {

@@ -1,4 +1,5 @@
 package com.socrata.http
+package impl
 
 import scala.{collection => sc}
 import scala.io.Codec

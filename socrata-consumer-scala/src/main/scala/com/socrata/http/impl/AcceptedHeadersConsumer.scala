@@ -1,4 +1,5 @@
 package com.socrata.http
+package impl
 
 import scala.{collection => sc}
 
@@ -6,7 +7,7 @@ import com.rojoma.json.ast.{JString, JObject, JValue}
 
 import HeadersConsumerUtils._
 
-class AcceptedHeadersConsumer(defaultRetryAfter: Int) extends HeadersConsumer[Retryable[Nothing]] {
+private [http] class AcceptedHeadersConsumer(defaultRetryAfter: Int) extends HeadersConsumer[Retryable[Nothing]] {
   def apply(headers: sc.Map[String, Seq[String]]): Left[BodyConsumer[Retryable[Nothing]], Nothing] = {
     jsonCodec(headers) match {
       case Some(codec) =>
