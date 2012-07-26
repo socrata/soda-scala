@@ -11,18 +11,14 @@ import HeadersConsumerUtils._
 
 private [http] class AcceptedHeadersConsumer(defaultRetryAfter: Int) extends HeadersConsumer[Retryable[Nothing]] {
   def apply(headers: sc.Map[String, Seq[String]]): Left[BodyConsumer[Retryable[Nothing]], Nothing] = {
-    jsonCodec(headers) match {
-      case Some(codec) =>
-        headers.get("X-SODA2-Location").map(_.last) match {
-          case Some(url) =>
-            val retryAfter = headers.get("X-SODA2-Retry-After").map(_.last).map(_.toInt).getOrElse(defaultRetryAfter)
-            Left(new SingleJValueBodyConsumer(codec).map(new202(url, retryAfter, _)))
-          case None =>
-            // legacy; have to read a JSON object and see if there's a token in it
-            Left(new SingleJValueBodyConsumer(codec).map(old202(_)))
-        }
+    val codec = jsonCodec(headers)
+    headers.get("X-SODA2-Location").map(_.last) match {
+      case Some(url) =>
+        val retryAfter = headers.get("X-SODA2-Retry-After").map(_.last).map(_.toInt).getOrElse(defaultRetryAfter)
+        Left(new SingleJValueBodyConsumer(codec).map(new202(url, retryAfter, _)))
       case None =>
-        error("NYI") // protocol error: this should ALWAYS be JSON!
+        // legacy; have to read a JSON object and see if there's a token in it
+        Left(new SingleJValueBodyConsumer(codec).map(old202(_)))
     }
   }
 
