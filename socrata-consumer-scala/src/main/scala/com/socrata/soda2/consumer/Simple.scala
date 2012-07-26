@@ -2,6 +2,7 @@ package com.socrata.soda2.consumer
 
 import com.socrata.future.Future
 import com.socrata.iteratee._
+import com.socrata.soda2.Resource
 
 /** A very high-level interface for running queries against a SODA2 service. */
 class Simple(val lowLevel: LowLevel) {

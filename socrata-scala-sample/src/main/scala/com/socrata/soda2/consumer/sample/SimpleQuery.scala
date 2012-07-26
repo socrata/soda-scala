@@ -7,7 +7,7 @@ import com.rojoma.json.ast.JValue
 
 import com.socrata.future.ExecutionContext.implicits._
 import com.socrata.soda2.consumer.http.SimpleHttp
-import com.socrata.soda2.consumer.Resource
+import com.socrata.soda2.Resource
 
 object SimpleQuery {
   def main(args: Array[String]) {
