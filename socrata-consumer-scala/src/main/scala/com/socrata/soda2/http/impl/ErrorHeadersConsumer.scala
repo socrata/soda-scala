@@ -19,6 +19,6 @@ private[http] object ErrorHeadersConsumer extends HeadersConsumer[Nothing] {
     }
 
   def processError(errorObject: JValue): Nothing = {
-    throw new SodaHttpException(errorObject.asInstanceOf[JObject]("message").asInstanceOf[JString].string)
+    error("NYI")
   }
 }
