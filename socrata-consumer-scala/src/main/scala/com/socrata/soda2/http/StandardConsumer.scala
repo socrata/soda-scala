@@ -11,11 +11,13 @@ import impl.{OKHeadersConsumer, AcceptedHeadersConsumer, ErrorHeadersConsumer}
  * request.  This handles converting errors into exceptions and manages the details of
  * retrying long-running requests.
  *
+ * @param resource The original resource being requested.  Note: this exists purely to support enriching the
+ *                 message provided by SODA1 exceptions.  It will go away once SODA1 has been phased out.
  * @param bodyConsumer The bodyConsumer to be used in the event that the request succeeds at the HTTP level.
  * @param defaultRetryAfter The timeout in seconds to use if a 202 response is received with no suggested timeout value.
  * @param execContext A strategy for launching worker asynchronous worker threads.
  */
-class StandardConsumer[T](bodyConsumer: Codec => BodyConsumer[T], defaultRetryAfter: Int = 60)(implicit execContext: ExecutionContext) extends StatusConsumer[Retryable[T]] {
+class StandardConsumer[T](resource: String, bodyConsumer: Codec => BodyConsumer[T], defaultRetryAfter: Int = 60)(implicit execContext: ExecutionContext) extends StatusConsumer[Retryable[T]] {
   def apply(status: Status): Either[HeadersConsumer[Retryable[T]], Retryable[T]] = {
     if(status.isSuccess) success(status)
     else if(status.isRedirect) redirect(status)
@@ -46,10 +48,10 @@ class StandardConsumer[T](bodyConsumer: Codec => BodyConsumer[T], defaultRetryAf
   }
 
   private def clientError(status: Status) = {
-    Left(ErrorHeadersConsumer)
+    Left(new ErrorHeadersConsumer(resource, status.code))
   }
 
   private def serverError(status: Status) = {
-    Left(ErrorHeadersConsumer)
+    Left(new ErrorHeadersConsumer(resource, status.code))
   }
 }

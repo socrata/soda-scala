@@ -13,18 +13,19 @@ import com.socrata.http.Authorization
 import com.socrata.http.implicits._
 import com.socrata.iteratee.CharIteratee
 
+// should this be moved to soda2.http?
 class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int, val authorization: Authorization)(implicit executionContext: ExecutionContext) extends LowLevel {
   def execute[T](resource: String, getParameters: Map[String, Seq[String]], iteratee: CharIteratee[T]): Future[T] =
-    doGet(urlForResource(resource).toString, Some(getParameters), iteratee).flatMap(maybeRetry(resource, getParameters, iteratee, _))
+    doGet(urlForResource(resource).toString, resource.toString, Some(getParameters), iteratee).flatMap(maybeRetry(resource, getParameters, iteratee, _))
 
-  def doGet[T](url: String, queryParameters: Option[Map[String, Seq[String]]], iteratee: CharIteratee[T]): Future[Retryable[T]] = {
+  def doGet[T](url: String, resource: String, queryParameters: Option[Map[String, Seq[String]]], iteratee: CharIteratee[T]): Future[Retryable[T]] = {
     def bodyConsumer(codec: Codec) = new RowProducer(codec, iteratee)
     val builder = client.prepareGet(url).
       maybeSetQueryParametersS(queryParameters).
       setFollowRedirects(true).
       setHeader("Accept", "application/json").
       authorize(authorization)
-    builder.makeRequest(new StandardConsumer(bodyConsumer))
+    builder.makeRequest(new StandardConsumer(resource, bodyConsumer))
   }
 
   def urlForResource(resource: String) =
@@ -43,7 +44,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
             execute(resource, getParameters + ("ticket" -> Seq(ticket)), iteratee)
           case Redirect(url, _, _) =>
             val target = urlForResource(resource).toURI.resolve(url).toURL.toString
-            doGet(target, None, iteratee).flatMap(maybeRetry(resource, getParameters, iteratee, _))
+            doGet(target, resource, None, iteratee).flatMap(maybeRetry(resource, getParameters, iteratee, _))
         }
       }.flatten
   }
