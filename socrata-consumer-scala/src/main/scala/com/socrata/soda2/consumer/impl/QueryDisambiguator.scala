@@ -1,4 +1,4 @@
-package com.socrata.consumer
+package com.socrata.soda2.consumer
 package impl
 
 /** Passed as an implicit parameter to certain overloaded methods which would otherwise

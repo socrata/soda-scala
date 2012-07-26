@@ -1,9 +1,10 @@
-package com.socrata.http
+package com.socrata.soda2.http
 
 import scala.io.Codec
 
 import com.rojoma.json.ast.JValue
 
+import com.socrata.http.BodyConsumer
 import com.socrata.iteratee.{IdentityIteratee, CharJValueEnumeratee, ByteCharEnumeratee, ByteIteratee}
 
 /** A bodyConsumer which expects to read a single [[com.rojoma.json.ast.JValue]] out of an

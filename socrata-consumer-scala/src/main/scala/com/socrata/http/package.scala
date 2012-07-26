@@ -34,10 +34,6 @@ package object http {
     def map[U](f: T => U): BodyConsumer[U] = new MappedBodyConsumer(this, f)
   }
 
-  /** A type alias for the result of [[com.socrata.http.StandardConsumer]], representing either
-   * the final value produced or the need to make another HTTP request. */
-  type Retryable[+T] = Either[NewRequest, T]
-
   private class MappedBodyConsumer[A, B](bc: BodyConsumer[A], f: A => B) extends BodyConsumer[B] {
     def apply(bytes: Array[Byte], isLast: Boolean) =
       bc(bytes, isLast) match {

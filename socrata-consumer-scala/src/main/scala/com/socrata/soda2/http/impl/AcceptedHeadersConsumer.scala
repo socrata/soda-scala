@@ -1,9 +1,11 @@
-package com.socrata.http
+package com.socrata.soda2.http
 package impl
 
 import scala.{collection => sc}
 
 import com.rojoma.json.ast.{JString, JObject, JValue}
+
+import com.socrata.http.{BodyConsumer, HeadersConsumer}
 
 import HeadersConsumerUtils._
 

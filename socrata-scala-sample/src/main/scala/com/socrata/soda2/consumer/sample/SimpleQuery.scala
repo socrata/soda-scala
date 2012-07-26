@@ -1,6 +1,4 @@
-package com.socrata
-package consumer
-package sample
+package com.socrata.soda2.consumer.sample
 
 import javax.net.ssl.SSLContext
 
@@ -8,6 +6,8 @@ import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
 import com.rojoma.json.ast.JValue
 
 import com.socrata.future.ExecutionContext.implicits._
+import com.socrata.soda2.consumer.http.SimpleHttp
+import com.socrata.soda2.consumer.Resource
 
 object SimpleQuery {
   def main(args: Array[String]) {
@@ -16,7 +16,7 @@ object SimpleQuery {
       build()
     val client = new AsyncHttpClient(clientConfig)
     try {
-      val service = new http.SimpleHttp(client, "explore.data.gov")
+      val service = new SimpleHttp(client, "explore.data.gov")
 
       val future = service.query(Resource("644b-gaut"), Map("namelast" -> "CLINTON")).foldLeft(Set.empty[JValue]) { (firstNames, row) =>
         firstNames + row("namefirst")

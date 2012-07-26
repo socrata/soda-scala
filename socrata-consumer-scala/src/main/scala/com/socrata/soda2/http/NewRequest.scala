@@ -1,4 +1,4 @@
-package com.socrata.http
+package com.socrata.soda2.http
 
 import com.rojoma.json.ast.JObject
 

@@ -1,10 +1,12 @@
-package com.socrata.http
+package com.socrata.soda2.http
 package impl
 
 import scala.{collection => sc}
 import scala.io.Codec
 
 import com.ning.http.client.RequestBuilderBase
+
+import com.socrata.http.{BodyConsumer, HeadersConsumer}
 
 import HeadersConsumerUtils._
 

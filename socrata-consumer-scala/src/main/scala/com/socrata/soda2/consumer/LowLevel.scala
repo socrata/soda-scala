@@ -1,11 +1,11 @@
-package com.socrata.consumer
+package com.socrata.soda2.consumer
 
-import com.socrata.consumer.impl.QueryDisambiguator
+import com.socrata.soda2.consumer.impl.QueryDisambiguator
 import com.socrata.future.Future
 import com.socrata.iteratee.CharIteratee
 
 /** Very low-level access to a SODA2 server.  This encapsulates all HTTP actions so higher-level code
- * such as a [[com.socrata.consumer.Simple]] object can deal purely with the data returned. */
+ * such as a [[com.socrata.soda2.consumer.Simple]] object can deal purely with the data returned. */
 trait LowLevel {
   /** Executes a GET query against a SODA2 server and feeds the character data returned into the given
    * [[com.socrata.iteratee.Iteratee]]. */

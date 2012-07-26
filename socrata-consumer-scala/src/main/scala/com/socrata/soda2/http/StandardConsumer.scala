@@ -1,9 +1,11 @@
-package com.socrata.http
+package com.socrata.soda2.http
 
 import scala.io.Codec
 
 import com.socrata.future.ExecutionContext
-import com.socrata.http.impl.{OKHeadersConsumer, AcceptedHeadersConsumer}
+import com.socrata.http.{BodyConsumer, HeadersConsumer, StatusConsumer, Status}
+
+import impl.{OKHeadersConsumer, AcceptedHeadersConsumer, ErrorHeadersConsumer}
 
 /** A functoin that produces a state machine that understands the HTTP envelope of a SODA2
  * request.  This handles converting errors into exceptions and manages the details of
@@ -46,12 +48,10 @@ class StandardConsumer[T](bodyConsumer: Codec => BodyConsumer[T], defaultRetryAf
   }
 
   private def clientError(status: Status) = {
-    // fail with appropriate error
-    error("NYI")
+    Left(ErrorHeadersConsumer)
   }
 
   private def serverError(status: Status) = {
-    // fail with appropriate error
-    error("NYI")
+    Left(ErrorHeadersConsumer)
   }
 }

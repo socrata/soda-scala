@@ -1,4 +1,4 @@
-package com.socrata.consumer
+package com.socrata.soda2.consumer
 
 import com.socrata.future.Future
 import com.socrata.iteratee._
@@ -12,7 +12,7 @@ class Simple(val lowLevel: LowLevel) {
 }
 
 class SimpleQuery(lowLevel: LowLevel, resource: String, getParameters: Map[String, String]) {
-  /** Feeds [[com.socrata.consumer.Row]] objects into an [[com.socrata.iteratee.Iteratee]] to
+  /** Feeds [[com.socrata.soda2.consumer.Row]] objects into an [[com.socrata.iteratee.Iteratee]] to
    * produce a result.  This is the most general data access method. */
   def iterate[T](iteratee: Iteratee[Row, T]): Future[T] =
     lowLevel.execute(resource, getParameters, new CharJArrayElementEnumeratee(new JValueRowEnumeratee(iteratee)))

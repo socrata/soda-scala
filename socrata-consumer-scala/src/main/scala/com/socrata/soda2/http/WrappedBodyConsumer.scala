@@ -1,5 +1,7 @@
-package com.socrata.http
+package com.socrata.soda2.http
 package impl
+
+import com.socrata.http.BodyConsumer
 
 private[http] class WrappedBodyConsumer[T](underlying: BodyConsumer[T]) extends BodyConsumer[Retryable[T]] {
   def apply(bytes: Array[Byte], isLast: Boolean) =

@@ -1,4 +1,4 @@
-package com.socrata.consumer.http
+package com.socrata.soda2.consumer.http
 
 import scala.io.Codec
 
@@ -6,12 +6,12 @@ import java.net.URL
 
 import com.ning.http.client.AsyncHttpClient
 
-import com.socrata.consumer.{LowLevel, RowProducer}
+import com.socrata.soda2.consumer.{LowLevel, RowProducer}
+import com.socrata.soda2.http._
 import com.socrata.future.{ExecutionContext, Future}
+import com.socrata.http.Authorization
 import com.socrata.http.implicits._
-import com.socrata.http._
 import com.socrata.iteratee.CharIteratee
-import com.socrata.http.Retry
 
 class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int, val authorization: Authorization)(implicit executionContext: ExecutionContext) extends LowLevel {
   def execute[T](resource: String, getParameters: Map[String, Seq[String]], iteratee: CharIteratee[T]): Future[T] =

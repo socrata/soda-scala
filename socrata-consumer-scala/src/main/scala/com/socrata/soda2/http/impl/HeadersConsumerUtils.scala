@@ -1,4 +1,4 @@
-package com.socrata.http
+package com.socrata.soda2.http
 package impl
 
 import scala.{collection => sc}
