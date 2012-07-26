@@ -1,6 +1,6 @@
 package com.socrata.soda2.http
 
-import com.socrata.soda2.ProtocolException
+import com.socrata.soda2.SodaProtocolException
 
 class IllegalResponseCharsetNameException(val charset: String, cause: Throwable)
-  extends ProtocolException("Bad response charset name: " + charset, cause)
+  extends SodaProtocolException("Bad response charset name: " + charset, cause)

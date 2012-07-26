@@ -1,6 +1,6 @@
 package com.socrata.soda2.http
 
-import com.socrata.soda2.ProtocolException
+import com.socrata.soda2.SodaProtocolException
 
 class UnsupportedResponseCharsetException(val charset: String, cause: Throwable)
-  extends ProtocolException("Unsupported response charset: " + charset, cause)
+  extends SodaProtocolException("Unsupported response charset: " + charset, cause)

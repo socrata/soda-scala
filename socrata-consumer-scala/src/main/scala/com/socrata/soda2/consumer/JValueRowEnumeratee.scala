@@ -17,8 +17,8 @@ class JValueRowEnumeratee[T](iteratee: Iteratee[Row, T]) extends Iteratee[JValue
         def asJObject = v
       }
       iteratee.process(row).left.map(new JValueRowEnumeratee(_))
-    case _ =>
-      error("NYI")
+    case other =>
+      throw new InvalidRowJsonException(other, "Found a non-Object in the list of rows")
   }
 
   def endOfInput() = iteratee.endOfInput()

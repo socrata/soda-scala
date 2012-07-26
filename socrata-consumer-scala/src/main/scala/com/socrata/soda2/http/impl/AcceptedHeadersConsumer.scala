@@ -8,6 +8,7 @@ import com.rojoma.json.ast.{JString, JObject, JValue}
 import com.socrata.http.{BodyConsumer, HeadersConsumer}
 
 import HeadersConsumerUtils._
+import com.socrata.soda2.InvalidResponseJsonException
 
 private [http] class AcceptedHeadersConsumer(defaultRetryAfter: Int) extends HeadersConsumer[Retryable[Nothing]] {
   def apply(headers: sc.Map[String, Seq[String]]): Left[BodyConsumer[Retryable[Nothing]], Nothing] = {
@@ -25,15 +26,15 @@ private [http] class AcceptedHeadersConsumer(defaultRetryAfter: Int) extends Hea
   def new202(url: String, retryAfter: Int, body: JValue): Retryable[Nothing] = body match {
     case body: JObject =>
       Left(Redirect(url, retryAfter, extractDetails(body)))
-    case _ =>
-      error("NYI") // protocol error: this should ALWAYS be an Object!
+    case other =>
+      badResponse(other)
   }
 
   def extractDetails(body: JObject): JObject =
     body.get("details") match {
       case Some(details: JObject) => details
       case None => JObject(Map.empty)
-      case Some(_) => error("NYI") // protocol error
+      case Some(other) => badResponse(body)
     }
 
   def old202(body: JValue): Retryable[Nothing] = body match {
@@ -43,12 +44,14 @@ private [http] class AcceptedHeadersConsumer(defaultRetryAfter: Int) extends Hea
         case Some(JString(ticket)) =>
           RetryWithTicket(ticket, defaultRetryAfter, details)
         case Some(_) =>
-          error("NYI") // protocol error
+          throw new InvalidResponseJsonException(body, "Ticket field was not a string")
         case None =>
           Retry(defaultRetryAfter, details)
       }
       Left(action)
-    case _ =>
-      error("NYI") // protocol error: this should ALWAYS be an Object!
+    case other =>
+      badResponse(other)
   }
+
+  def badResponse(body: JValue) = throw new InvalidResponseJsonException(body, "Invalid Accepted response body")
 }

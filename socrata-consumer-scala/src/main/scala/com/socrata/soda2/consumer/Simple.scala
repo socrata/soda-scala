@@ -16,7 +16,12 @@ class SimpleQuery(lowLevel: LowLevel, resource: String, getParameters: Map[Strin
   /** Feeds [[com.socrata.soda2.consumer.Row]] objects into an [[com.socrata.iteratee.Iteratee]] to
    * produce a result.  This is the most general data access method. */
   def iterate[T](iteratee: Iteratee[Row, T]): Future[T] =
-    lowLevel.execute(resource, getParameters, new CharJArrayElementEnumeratee(new JValueRowEnumeratee(iteratee)))
+    lowLevel.execute(
+      resource,
+      getParameters,
+      new CharJArrayElementEnumeratee(
+        new JValueRowEnumeratee(iteratee),
+        { e => throw new MalformedJsonWhileReadingRowsException(e) }))
 
   /** Call a side-effecting function on each returned row.
    * @note There is no promise that any given call will be invoked on the same thread as any other call.
