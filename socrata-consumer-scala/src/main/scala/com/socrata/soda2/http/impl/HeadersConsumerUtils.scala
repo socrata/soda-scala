@@ -12,10 +12,10 @@ private[http] object HeadersConsumerUtils {
     try {
       Codec(charset).onMalformedInput(CodingErrorAction.REPLACE).onUnmappableCharacter(CodingErrorAction.REPLACE)
     } catch {
-      case _: UnsupportedCharsetException =>
-        throw UnsupportedResponseCharsetException(charset)
-      case _: IllegalCharsetNameException =>
-        throw IllegalResponseCharsetNameException(charset)
+      case e: UnsupportedCharsetException =>
+        throw new UnsupportedResponseCharsetException(charset, e)
+      case e: IllegalCharsetNameException =>
+        throw new IllegalResponseCharsetNameException(charset, e)
     }
 
   /**Checks that there is a content-type header, and that it is application/json, and returns the appropriate codec. */
@@ -23,10 +23,10 @@ private[http] object HeadersConsumerUtils {
     headers.get("Content-Type").map(_.last) match {
       case Some(contentType) =>
         val mimeType = new MimeType(contentType)
-        if (mimeType.getBaseType != "application/json") throw ResponseNotJSONException(Some(contentType))
+        if (mimeType.getBaseType != "application/json") throw new ResponseNotJSONException(Some(contentType))
         val charset = Option(mimeType.getParameter("charset")).getOrElse("iso-8859-1")
         codecFor(charset)
       case None =>
-        throw ResponseNotJSONException(None)
+        throw new ResponseNotJSONException(None)
     }
 }
