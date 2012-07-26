@@ -8,7 +8,7 @@ import com.ning.http.client.ListenableFuture
 import com.socrata.future.{ExecutionContext, Promise, Future}
 
 private[http] object WrappedFuture {
-  def apply[A](underlying: ListenableFuture[A])(implicit exeuctionContext: ExecutionContext): Future[A] = {
+  def apply[A](underlying: ListenableFuture[A])(implicit executionContext: ExecutionContext): Future[A] = {
     val promise = new Promise[A]
     underlying.addListener(new Runnable {
       override def run() {
@@ -21,7 +21,7 @@ private[http] object WrappedFuture {
             promise.break(e)
         }
       }
-    }, exeuctionContext.asJava)
+    }, executionContext.asJava)
     promise.future
   }
 }
