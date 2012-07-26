@@ -7,7 +7,7 @@ import com.socrata.http.{BodyConsumer, HeadersConsumer, StatusConsumer, Status}
 
 import impl.{OKHeadersConsumer, AcceptedHeadersConsumer, ErrorHeadersConsumer}
 
-/** A functoin that produces a state machine that understands the HTTP envelope of a SODA2
+/** A function that produces a state machine that understands the HTTP envelope of a SODA2
  * request.  This handles converting errors into exceptions and manages the details of
  * retrying long-running requests.
  *
