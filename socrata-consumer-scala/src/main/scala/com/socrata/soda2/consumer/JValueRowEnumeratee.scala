@@ -3,6 +3,7 @@ package com.socrata.soda2.consumer
 import com.rojoma.json.ast._
 
 import com.socrata.iteratee.Iteratee
+import com.socrata.soda2.ColumnNameLike
 
 class JValueRowEnumeratee[T](iteratee: Iteratee[Row, T]) extends Iteratee[JValue, T] {
   def process(value: JValue) = value match {
@@ -10,7 +11,9 @@ class JValueRowEnumeratee[T](iteratee: Iteratee[Row, T]) extends Iteratee[JValue
       val row = new Row {
         def columnTypes = fields.mapValues(_ => "JValue").toMap
 
-        def apply(columnName: String) = fields.getOrElse(columnName, JNull)
+        def apply[C](columnName: C)(implicit ev: ColumnNameLike[C]) = fields(ev.asColumnName(columnName).toString)
+        def get[C](columnName: C)(implicit ev: ColumnNameLike[C]) = fields.get(ev.asColumnName(columnName).toString)
+        def getOrElse[C](columnName: C, orElse: =>JValue)(implicit ev: ColumnNameLike[C]) = fields.getOrElse(ev.asColumnName(columnName).toString, orElse)
 
         override def toString = v.toString
 
