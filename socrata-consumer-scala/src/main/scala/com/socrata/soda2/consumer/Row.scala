@@ -1,7 +1,7 @@
 package com.socrata.soda2.consumer
 
 import com.rojoma.json.ast.{JObject, JValue}
-import com.socrata.soda2.ColumnNameLike
+import com.socrata.soda2.{ColumnName, ColumnNameLike}
 
 /**
  * @note This is a very rough interface; it will be replaced with something
@@ -10,7 +10,7 @@ import com.socrata.soda2.ColumnNameLike
  */
 trait Row {
   /** Returns a view of the schema of this result set. */
-  def columnTypes: Map[String, String]
+  def columnTypes: Map[ColumnName, String]
 
   /** Return the value for the given column.  If the column name does not exist in
    * `columnTypes.keys` then this throws a NoSuchElementException. */
