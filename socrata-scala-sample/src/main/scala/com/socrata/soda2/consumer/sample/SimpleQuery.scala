@@ -18,7 +18,7 @@ object SimpleQuery {
     try {
       val service = new SimpleHttp(client, "explore.data.gov")
 
-      val future = service.query(Resource("/id/644b-gaut"), "namelast" -> "CLINTON").foldLeft(Set.empty[JValue]) { (firstNames, row) =>
+      val future = service.query("/id/644b-gaut", "namelast" -> "CLINTON").foldLeft(Set.empty[JValue]) { (firstNames, row) =>
         firstNames + row("namefirst")
       }
 

@@ -1,5 +1,6 @@
 package com.socrata.soda2
 
+/** An object representing a SODA2 resource identifier. */
 class Resource(name: String) {
   // TODO: check that "name" is a valid resource-name
   override def toString = name

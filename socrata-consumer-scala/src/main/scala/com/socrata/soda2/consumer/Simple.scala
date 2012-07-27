@@ -3,14 +3,15 @@ package com.socrata.soda2.consumer
 import com.socrata.soda2.consumer.impl.FieldValue
 import com.socrata.future.Future
 import com.socrata.iteratee._
-import com.socrata.soda2.Resource
+import com.socrata.soda2.{ResourceLike, Resource}
 
 /** A very high-level interface for running queries against a SODA2 service. */
 class Simple(val lowLevel: LowLevel) {
   /** Produces an object that can be used to run the given query against the given resource.  This does
    * not actually run the query.  Instead it produces an object which can be used to run the query
    * and feed the results into a data consumer. */
-  def query(resource: Resource, parameters: FieldValue*) = new SimpleQuery(lowLevel, resource, parameters)
+  def query[T](resource: T, parameters: FieldValue*)(implicit ev: ResourceLike[T]) =
+    new SimpleQuery(lowLevel, ev.asResource(resource), parameters)
 }
 
 class SimpleQuery(lowLevel: LowLevel, resource: Resource, parameters: Seq[FieldValue]) {
