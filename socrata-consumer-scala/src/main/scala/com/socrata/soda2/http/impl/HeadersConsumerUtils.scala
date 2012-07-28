@@ -1,11 +1,12 @@
 package com.socrata.soda2.http
 package impl
 
-import scala.{collection => sc}
 import scala.io.Codec
 
 import java.nio.charset.{IllegalCharsetNameException, UnsupportedCharsetException, CodingErrorAction}
 import javax.activation.MimeType
+
+import com.socrata.http.Headers
 
 private[http] object HeadersConsumerUtils {
   def codecFor(charset: String): Codec =
@@ -19,7 +20,7 @@ private[http] object HeadersConsumerUtils {
     }
 
   /**Checks that there is a content-type header, and that it is application/json, and returns the appropriate codec. */
-  def jsonCodec(headers: sc.Map[String, Seq[String]]): Codec =
+  def jsonCodec(headers: Headers): Codec =
     headers.get("Content-Type").map(_.last) match {
       case Some(contentType) =>
         val mimeType = new MimeType(contentType)

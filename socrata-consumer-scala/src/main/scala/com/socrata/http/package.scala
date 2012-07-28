@@ -9,11 +9,14 @@ package object http {
    * processing by either throwing an exception or returning `Right`. */
   type StatusConsumer[+T] = Status => Either[HeadersConsumer[T], T]
 
+  /** A collection of HTTP headers */
+  type Headers = sc.Map[String, Seq[String]]
+
   /** The header-consuming stage of an HTTP processing state machine.  This is called by a
    * [[com.socrata.http.NiceAsyncHandler]] with the complete HTTP headers, and may either transition
    * into the consuming-body state by returning `Left` or terminate processing by either throwing an
    * exception or returning `Right`. */
-  type HeadersConsumer[+T] = sc.Map[String, Seq[String]] => Either[BodyConsumer[T], T]
+  type HeadersConsumer[+T] = Headers => Either[BodyConsumer[T], T]
 
   /** The body-consuming stage of an HTTP processing state machine.  This is called by a
    * [[com.socrata.http.NiceAsyncHandler]] with chunks of the HTTP response body.  It may either

@@ -3,7 +3,7 @@ package com.socrata.soda2.http
 import scala.io.Codec
 
 import com.socrata.future.ExecutionContext
-import com.socrata.http.{BodyConsumer, HeadersConsumer, StatusConsumer, Status}
+import com.socrata.http.{BodyConsumer, HeadersConsumer, StatusConsumer, Status, Headers}
 
 import impl.{OKHeadersConsumer, AcceptedHeadersConsumer, ErrorHeadersConsumer}
 import com.socrata.soda2.Resource

@@ -1,17 +1,15 @@
 package com.socrata.soda2.http
 package impl
 
-import scala.{collection => sc}
-
 import com.rojoma.json.ast.{JString, JObject, JValue}
 
-import com.socrata.http.{BodyConsumer, HeadersConsumer}
+import com.socrata.http.{BodyConsumer, HeadersConsumer, Headers}
 
 import HeadersConsumerUtils._
 import com.socrata.soda2.InvalidResponseJsonException
 
 private [http] class AcceptedHeadersConsumer(defaultRetryAfter: Int) extends HeadersConsumer[Retryable[Nothing]] {
-  def apply(headers: sc.Map[String, Seq[String]]): Left[BodyConsumer[Retryable[Nothing]], Nothing] = {
+  def apply(headers: Headers): Left[BodyConsumer[Retryable[Nothing]], Nothing] = {
     val codec = jsonCodec(headers)
     headers.get("X-SODA2-Location").map(_.last) match {
       case Some(url) =>
