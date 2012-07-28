@@ -2,13 +2,13 @@ package com.socrata.soda2.consumer.http
 
 import com.ning.http.client.AsyncHttpClient
 
-import com.socrata.soda2.consumer.Simple
+import com.socrata.soda2.consumer.Consumer
 import com.socrata.future.ExecutionContext
 import com.socrata.http.{Authorization, NoAuth}
 import com.socrata.future.ExecutionContext
 
 /** An implementation of [[com.socrata.soda2.consumer.Simple]] which operates on a real HTTP server. */
-class SimpleHttp(lowLevel: LowLevelHttp) extends Simple(lowLevel) {
+class HttpConsumer(lowLevel: LowLevelHttp) extends Consumer(lowLevel) {
   /** Sets up the application's execution environment for making queries.
    *
    * @param client The [[com.ning.http.client.AsyncHttpClient]] to use for making queries.

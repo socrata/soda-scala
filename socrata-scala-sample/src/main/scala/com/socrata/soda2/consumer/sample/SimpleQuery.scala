@@ -6,8 +6,7 @@ import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
 import com.rojoma.json.ast.JValue
 
 import com.socrata.future.ExecutionContext.implicits._
-import com.socrata.soda2.consumer.http.SimpleHttp
-import com.socrata.soda2.Resource
+import com.socrata.soda2.consumer.http.HttpConsumer
 
 object SimpleQuery {
   def main(args: Array[String]) {
@@ -16,7 +15,7 @@ object SimpleQuery {
       build()
     val client = new AsyncHttpClient(clientConfig)
     try {
-      val service = new SimpleHttp(client, "explore.data.gov")
+      val service = new HttpConsumer(client, "explore.data.gov")
 
       val future = service.query("/id/644b-gaut", "namelast" -> "CLINTON").foldLeft(Set.empty[JValue]) { (firstNames, row) =>
         firstNames + row("namefirst")
