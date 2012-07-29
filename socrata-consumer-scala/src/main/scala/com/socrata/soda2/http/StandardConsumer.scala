@@ -18,7 +18,7 @@ import com.socrata.soda2.Resource
  * @param defaultRetryAfter The timeout in seconds to use if a 202 response is received with no suggested timeout value.
  * @param execContext A strategy for launching worker asynchronous worker threads.
  */
-class StandardConsumer[T](resource: Resource, bodyConsumer: Codec => BodyConsumer[T], defaultRetryAfter: Int = 60)(implicit execContext: ExecutionContext) extends StatusConsumer[Retryable[T]] {
+class StandardConsumer[T](resource: Resource, bodyConsumer: (Headers, Codec) => BodyConsumer[T], defaultRetryAfter: Int = 60)(implicit execContext: ExecutionContext) extends StatusConsumer[Retryable[T]] {
   def apply(status: Status): Either[HeadersConsumer[Retryable[T]], Retryable[T]] = {
     if(status.isSuccess) success(status)
     else if(status.isRedirect) redirect(status)

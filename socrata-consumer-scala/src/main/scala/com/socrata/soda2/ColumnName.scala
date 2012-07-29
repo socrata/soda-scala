@@ -2,7 +2,8 @@ package com.socrata.soda2
 
 /** An object representing a SODA2 dataset column name */
 class ColumnName(name: String) {
-  // TODO: ensure "name" is a valid column name
+  // TODO: ensure "name" is a valid column name and throw IllegalArgumentException if not
+
   override def toString = name
 
   override def equals(o: Any) = o match {
@@ -13,6 +14,6 @@ class ColumnName(name: String) {
   override def hashCode = toString.hashCode
 }
 
-object ColumnName {
+object ColumnName extends (String => ColumnName) {
   def apply(name: String) = new ColumnName(name)
 }

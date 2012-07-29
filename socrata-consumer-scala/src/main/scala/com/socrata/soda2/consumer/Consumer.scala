@@ -5,7 +5,7 @@ import scala.collection.mutable.MapBuilder
 import com.socrata.soda2.consumer.impl.{FieldValue, QueryRunner}
 import com.socrata.future.Future
 import com.socrata.iteratee._
-import com.socrata.soda2.{ResourceLike, Resource}
+import com.socrata.soda2.{ResourceLike, Resource, Soda2Metadata}
 
 /** A very high-level interface for running queries against a SODA2 service. */
 class Consumer(val lowLevel: LowLevel) {
@@ -38,7 +38,7 @@ class Consumer(val lowLevel: LowLevel) {
 }
 
 class SimpleQuery(lowLevel: LowLevel, resource: Resource, parameters: Seq[(String, String)]) extends QueryRunner(lowLevel) {
-  protected def executeQuery[T](iteratee: CharIteratee[T]): Future[T] =
+  protected def executeQuery[T](iteratee: Soda2Metadata => CharIteratee[T]): Future[T] =
     lowLevel.execute(
       resource,
       parameters.toMap,
@@ -46,7 +46,7 @@ class SimpleQuery(lowLevel: LowLevel, resource: Resource, parameters: Seq[(Strin
 }
 
 class SoQLQuery(lowLevel: LowLevel, resource: Resource, soql: String) extends QueryRunner(lowLevel) {
-  protected def executeQuery[T](iteratee: CharIteratee[T]): Future[T] =
+  protected def executeQuery[T](iteratee: Soda2Metadata => CharIteratee[T]): Future[T] =
     lowLevel.execute(
       resource,
       Map("$query" -> soql),

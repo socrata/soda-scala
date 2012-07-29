@@ -9,10 +9,10 @@ import com.socrata.http.{BodyConsumer, HeadersConsumer, Headers}
 
 import HeadersConsumerUtils._
 
-class OKHeadersConsumer[R <: RequestBuilderBase[R], T](bodyConsumer: Codec => BodyConsumer[T]) extends HeadersConsumer[Retryable[T]] {
+class OKHeadersConsumer[R <: RequestBuilderBase[R], T](bodyConsumer: (Headers, Codec) => BodyConsumer[T]) extends HeadersConsumer[Retryable[T]] {
   def apply(headers: Headers): Left[BodyConsumer[Retryable[T]], Nothing] = {
     val codec = jsonCodec(headers)
-    val realBodyConsumer = bodyConsumer(codec)
+    val realBodyConsumer = bodyConsumer(headers, codec)
     Left(new WrappedBodyConsumer(realBodyConsumer))
   }
 }

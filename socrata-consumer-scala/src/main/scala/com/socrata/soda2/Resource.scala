@@ -2,7 +2,7 @@ package com.socrata.soda2
 
 /** An object representing a SODA2 resource identifier. */
 class Resource(name: String) {
-  // TODO: check that "name" is a valid resource-name
+  // TODO: check that "name" is a valid resource-name and throw IllegalArgumentException if not
   override def toString = name
 
   override def equals(o: Any) = o match {
@@ -13,6 +13,6 @@ class Resource(name: String) {
   override def hashCode = toString.hashCode
 }
 
-object Resource {
+object Resource extends (String => Resource) {
   def apply(name: String) = new Resource(name)
 }
