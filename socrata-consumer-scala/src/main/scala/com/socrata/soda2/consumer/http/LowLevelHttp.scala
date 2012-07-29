@@ -18,6 +18,8 @@ import com.socrata.soda2.{Resource, Soda2Metadata}
 
 // should this be moved to soda2.http?
 class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int, val authorization: Authorization)(implicit executionContext: ExecutionContext) extends LowLevel {
+  import LowLevelHttp._
+
   def execute[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: Soda2Metadata => CharIteratee[T]): Future[T] =
     doGet(urlForResource(resource).toString, resource, Some(getParameters), iteratee).flatMap(maybeRetry(resource, getParameters, iteratee, _))
 
@@ -27,6 +29,8 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
       setFollowRedirects(true).
       setHeader("Accept", "application/json").
       authorize(authorization)
+    log.debug("Making request to {}", url)
+    queryParameters.foreach{ p => log.debug("With query parameters {}", com.rojoma.json.util.JsonUtil.renderJson(p)) }
     builder.makeRequest(new StandardConsumer(resource, bodyConsumer(_, _, iteratee)))
   }
 
@@ -49,6 +53,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
       Future.now(result)
     case Left(newRequest) =>
       // TODO: some sort of progress based on newRequest.details
+      log.debug("Got 202; retrying in {}s", newRequest.retryAfter)
       executionContext.in(newRequest.retryAfter) {
         newRequest match {
           case Retry(_, _) =>
@@ -61,4 +66,8 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
         }
       }.flatten
   }
+}
+
+object LowLevelHttp {
+  private val log = org.slf4j.LoggerFactory.getLogger(classOf[LowLevelHttp])
 }

@@ -10,6 +10,8 @@ import com.ning.http.client.{HttpResponseBodyPart, HttpResponseHeaders, HttpResp
  * @param consumer The initial state of the machine.
  */
 class NiceAsyncHandler[T](consumer: StatusConsumer[T]) extends AsyncHandler[T] {
+  import NiceAsyncHandler._
+
   private var statusConsumer: StatusConsumer[T] = consumer
   private var headersConsumer: HeadersConsumer[T] = null
   private var bodyConsumer: BodyConsumer[T] = null
@@ -17,11 +19,14 @@ class NiceAsyncHandler[T](consumer: StatusConsumer[T]) extends AsyncHandler[T] {
   private var result: Either[Throwable, T] = null
 
   def onThrowable(t: Throwable) {
+    log.trace("Got throwable {}", t)
     result = Left(t)
   }
 
   def onStatusReceived(status: HttpResponseStatus): AsyncHandler.STATE = {
     if(statusConsumer == null) throw new IllegalStateException("not expecting status")
+
+    log.trace("Received response status {}", status.getStatusCode)
 
     // I don't know if we'll ever get one of these, or if we do if
     // async-http-client will let us know about it -- if we do it'll
@@ -46,6 +51,9 @@ class NiceAsyncHandler[T](consumer: StatusConsumer[T]) extends AsyncHandler[T] {
   def onHeadersReceived(headers: HttpResponseHeaders): AsyncHandler.STATE = {
     if(headers.isTraillingHeadersReceived) return AsyncHandler.STATE.CONTINUE
     if(headersConsumer == null) throw new IllegalStateException("not expecting headers")
+
+    log.trace("Received response headers")
+
     val headersResult = headersConsumer((headers.getHeaders : java.util.Map[String, java.util.List[String]]).asScala.mapValues(_.asScala))
 
     headersConsumer = null
@@ -62,7 +70,12 @@ class NiceAsyncHandler[T](consumer: StatusConsumer[T]) extends AsyncHandler[T] {
 
   def onBodyPartReceived(bodyPart: HttpResponseBodyPart): AsyncHandler.STATE = {
     if(bodyConsumer == null) throw new IllegalStateException("not expecting body part")
-    bodyConsumer(bodyPart.getBodyPartBytes, bodyPart.isLast) match {
+
+    val bytes = bodyPart.getBodyPartBytes
+
+    log.trace("Received {} byte(s) of response body", bytes.length)
+
+    bodyConsumer(bytes, bodyPart.isLast) match {
       case Left(newBodyConsumer) =>
         bodyConsumer = newBodyConsumer
         AsyncHandler.STATE.CONTINUE
@@ -74,10 +87,17 @@ class NiceAsyncHandler[T](consumer: StatusConsumer[T]) extends AsyncHandler[T] {
   }
 
   def onCompleted(): T = {
-    if(bodyConsumer != null) result = Right(bodyConsumer(new Array[Byte](0), isLast = true).right.get)
+    log.trace("Response completed")
+    if(bodyConsumer != null) {
+      result = Right(bodyConsumer(new Array[Byte](0), isLast = true).right.get)
+    }
     result match {
       case Left(err) => throw err
       case Right(res) => res
     }
   }
+}
+
+object NiceAsyncHandler {
+  private val log = org.slf4j.LoggerFactory.getLogger(classOf[NiceAsyncHandler[_]])
 }
