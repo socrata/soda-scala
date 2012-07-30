@@ -128,4 +128,6 @@ trait Future[+A] {
       case None => await(); apply()
     }
   }
+
+  implicit def executionContext: ExecutionContext
 }

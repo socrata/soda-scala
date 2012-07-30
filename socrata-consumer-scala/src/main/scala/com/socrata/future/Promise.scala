@@ -4,7 +4,7 @@ import java.util.concurrent.CountDownLatch
 
 /** An object that represents the promise to produce a result
  * at some point in the future. */
-class Promise[A] { self =>
+class Promise[A](implicit executionContext: ExecutionContext) { self =>
   private var listeners: List[Either[Throwable, A] => _] = Nil
   private var result: Either[Throwable, A] = _
 
@@ -31,12 +31,14 @@ class Promise[A] { self =>
   }
 
   private def executeOnResult(listener: Either[Throwable, A] => _) {
-    try {
-      listener(result)
-    } catch {
-      case t: Throwable =>
-        // FIXME something more than this
-        t.printStackTrace()
+    executionContext.execute {
+      try {
+        listener(result)
+      } catch {
+        case t: Throwable =>
+          // FIXME something more than this
+          t.printStackTrace()
+      }
     }
   }
 
@@ -70,5 +72,7 @@ class Promise[A] { self =>
       onComplete { _ => join.countDown() }
       join.await()
     }
+
+    def executionContext = Promise.this.executionContext
   }
 }

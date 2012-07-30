@@ -14,4 +14,7 @@ private[future] class SimpleFailureFuture(e: Throwable) extends Future[Nothing] 
   override def flatMap[B](f: Nothing => Future[B]): Future[B] = this
 
   override def map[B](f: Nothing => B): Future[B] = this
+
+  // This never launches anything into a background thread
+  implicit def executionContext = ExecutionContext.noThreadsExecutionContext
 }

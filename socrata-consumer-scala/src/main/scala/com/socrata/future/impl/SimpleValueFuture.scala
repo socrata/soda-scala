@@ -10,4 +10,7 @@ private[future] class SimpleValueFuture[A](a: A) extends Future[A] {
   def result() = Some(a)
 
   def await() {}
+
+  // This never launches anything into a background thread
+  implicit def executionContext = ExecutionContext.noThreadsExecutionContext
 }

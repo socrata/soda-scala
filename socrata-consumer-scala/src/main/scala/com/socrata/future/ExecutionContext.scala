@@ -15,21 +15,23 @@ trait ExecutionContext {
 }
 
 object ExecutionContext {
-  object implicits {
-    /** An execution context which runs all tasks on the current thread. */
-    implicit val defaultExecutionContext = new ExecutionContext {
-      val asJava = new Executor {
-        def execute(command: Runnable) {
-          command.run()
-        }
-      }
-
-      def execute[A](a: =>A) = Future.now(a)
-
-      def in[A](seconds: Int)(a: =>A) = Future.now {
-        Thread.sleep(seconds * 1000L)
-        a
+  val noThreadsExecutionContext: ExecutionContext = new ExecutionContext {
+    val asJava = new Executor {
+      def execute(command: Runnable) {
+        command.run()
       }
     }
+
+    def execute[A](a: =>A) = Future.now(a)
+
+    def in[A](seconds: Int)(a: =>A) = Future.now {
+      Thread.sleep(seconds * 1000L)
+      a
+    }
+  }
+
+  object implicits {
+    /** An execution context which runs all tasks on the current thread. */
+    implicit val defaultExecutionContext = noThreadsExecutionContext
   }
 }
