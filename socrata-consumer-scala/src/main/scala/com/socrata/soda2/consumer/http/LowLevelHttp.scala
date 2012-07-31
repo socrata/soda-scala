@@ -46,7 +46,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
   }
 
   def urlForResource(resource: Resource) =
-    new URL("https", host, port, resource.toString)
+    new URL("https", host, port, "/id/" + resource.toString)
 
   def maybeRetry[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: Soda2Metadata => CharIteratee[T], x: Retryable[T]): Future[T] = x match {
     case Right(result) =>
