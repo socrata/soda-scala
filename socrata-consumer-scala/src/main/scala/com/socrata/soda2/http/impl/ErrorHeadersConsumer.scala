@@ -30,13 +30,13 @@ private[http] class ErrorHeadersConsumer(resource: Resource, code: Int) extends 
 }
 
 private[http] object ErrorHeadersConsumer {
-  case class LegacyError(code: String, message: Option[String])
+  case class LegacyError(code: Option[String], message: Option[String])
   implicit val legacyCodec = SimpleJsonCodecBuilder[LegacyError].gen("code", _.code, "message", _.message)
 
   def processLegacyError(resource: Resource, code: Int, errorObject: JObject): Nothing = {
     JsonCodec.fromJValue[LegacyError](errorObject) match {
       case Some(legacyError) =>
-        throw Soda1Exception(resource, code, legacyError.code, legacyError.message)
+        throw Soda1Exception(resource, code, legacyError.code.getOrElse("internal error"), legacyError.message)
       case None =>
         throw new InvalidResponseJsonException(errorObject, "Response body was not interpretable as an error")
     }

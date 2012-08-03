@@ -3,7 +3,7 @@ package com.socrata.soda2.consumer.http
 import scala.collection.JavaConverters._
 import scala.io.Codec
 
-import java.net.URL
+import java.net.{URI, URL}
 
 import com.ning.http.client.AsyncHttpClient
 
@@ -20,18 +20,18 @@ import com.socrata.soda2.{Resource, Soda2Metadata}
 class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int, val authorization: Authorization)(implicit executionContext: ExecutionContext) extends LowLevel {
   import LowLevelHttp._
 
-  def execute[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: Soda2Metadata => CharIteratee[T]): Future[T] =
-    doGet(urlForResource(resource).toString, resource, Some(getParameters), iteratee).flatMap(maybeRetry(resource, getParameters, iteratee, _))
+  def execute[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
+    doGet(uriForResource(resource), resource, Some(getParameters), iteratee).flatMap(maybeRetry(resource, getParameters, iteratee, _))
 
-  def doGet[T](url: String, resource: Resource, queryParameters: Option[Map[String, Seq[String]]], iteratee: Soda2Metadata => CharIteratee[T]): Future[Retryable[T]] = {
-    val builder = client.prepareGet(url).
+  def doGet[T](uri: URI, resource: Resource, queryParameters: Option[Map[String, Seq[String]]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[Retryable[T]] = {
+    val builder = client.prepareGet(uri.toString).
       maybeSetQueryParametersS(queryParameters).
       setFollowRedirects(true).
       setHeader("Accept", "application/json").
       authorize(authorization)
-    log.debug("Making request to {}", url)
+    log.debug("Making request to {}", uri)
     queryParameters.foreach{ p => log.debug("With query parameters {}", com.rojoma.json.util.JsonUtil.renderJson(p)) }
-    builder.makeRequest(new StandardConsumer(resource, bodyConsumer(_, _, iteratee)))
+    builder.makeRequest(new StandardConsumer(resource, bodyConsumer(_, _, iteratee(uri, _))))
   }
 
   def bodyConsumer[T](headers: Headers, codec: Codec, iteratee: Soda2Metadata => CharIteratee[T]) = {
@@ -45,10 +45,10 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
     new ResultProducer(codec, iteratee(soda2Metadata.asScala.mapValues(_.get(0))))
   }
 
-  def urlForResource(resource: Resource) =
-    new URL("https", host, port, "/id/" + resource.toString)
+  def uriForResource(resource: Resource) =
+    new URL("https", host, port, "/id/" + resource.toString).toURI
 
-  def maybeRetry[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: Soda2Metadata => CharIteratee[T], x: Retryable[T]): Future[T] = x match {
+  def maybeRetry[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: (URI, Soda2Metadata) => CharIteratee[T], x: Retryable[T]): Future[T] = x match {
     case Right(result) =>
       Future.now(result)
     case Left(newRequest) =>
@@ -61,7 +61,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
           case RetryWithTicket(ticket, _, _) =>
             execute(resource, getParameters + ("ticket" -> Seq(ticket)), iteratee)
           case Redirect(url, _, _) =>
-            val target = urlForResource(resource).toURI.resolve(url).toURL.toString
+            val target = uriForResource(resource).resolve(url)
             doGet(target, resource, None, iteratee).flatMap(maybeRetry(resource, getParameters, iteratee, _))
         }
       }.flatten

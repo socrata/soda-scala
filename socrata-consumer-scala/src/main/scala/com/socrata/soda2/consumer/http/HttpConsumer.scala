@@ -7,7 +7,7 @@ import com.socrata.future.ExecutionContext
 import com.socrata.http.{Authorization, NoAuth}
 import com.socrata.future.ExecutionContext
 
-/** An implementation of [[com.socrata.soda2.consumer.Simple]] which operates on a real HTTP server. */
+/** An implementation of [[com.socrata.soda2.consumer.Consumer]] which operates on a real HTTP server. */
 class HttpConsumer(lowLevel: LowLevelHttp) extends Consumer(lowLevel) {
   /** Sets up the application's execution environment for making queries.
    *

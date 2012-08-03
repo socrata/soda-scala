@@ -3,6 +3,8 @@ import sbt._
 object Dependencies {
   object versions {
     val asyncHttpClient = "1.7.5"
+    val jodaConvert = "1.2"
+    val jodaTime = "2.1"
     val rojomaJson = "1.4.7"
     val scalaCheck_28 = "1.8"
     val scalaCheck_29 = "1.10.0"
@@ -11,6 +13,10 @@ object Dependencies {
   }
 
   val asyncHttpClient = "com.ning" % "async-http-client" % versions.asyncHttpClient
+
+  val jodaConvert = "org.joda" % "joda-convert" % versions.jodaConvert
+
+  val jodaTime = "joda-time" % "joda-time" % versions.jodaTime
 
   val rojomaJson = "com.rojoma" %% "rojoma-json" % versions.rojomaJson
 

@@ -3,10 +3,10 @@ package com.socrata.soda2.consumer.sample
 import javax.net.ssl.SSLContext
 
 import com.ning.http.client.{AsyncHttpClientConfig, AsyncHttpClient}
-import com.rojoma.json.ast.JValue
 
 import com.socrata.future.ExecutionContext.implicits._
 import com.socrata.soda2.consumer.http.HttpConsumer
+import com.socrata.soda2.values.SodaString
 
 object SimpleQuery {
   def main(args: Array[String]) {
@@ -17,8 +17,11 @@ object SimpleQuery {
     try {
       val service = new HttpConsumer(client, "explore.data.gov")
 
-      val future = service.query("644b-gaut", "namelast" -> "CLINTON").foldLeft(Set.empty[JValue]) { (firstNames, row) =>
-        firstNames + row("namefirst")
+      val future = service.query("644b-gaut", "namelast" -> "CLINTON").foldLeft(Set.empty[String]) { (firstNames, row) =>
+        row("namefirst") match {
+          case Some(SodaString(firstName)) => firstNames + firstName
+          case _ => firstNames
+        }
       }
 
       println("Waiting...")
