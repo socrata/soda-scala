@@ -39,7 +39,6 @@ abstract class QueryRunner(lowLevel: LowLevel) {
   def allRows(): Future[IndexedSeq[Row]] = foldLeft(Vector.empty[Row])(_ :+ _)
 }
 
-
 private [impl] class SideEffectingIteratee[U](f: Row => U) extends Iteratee[Row, Unit] {
   def process(row: Row) = { f(row); Left(this) }
   def endOfInput() {}
@@ -51,15 +50,15 @@ private [impl] class FoldingIteratee[T](seed: T, f: (T, Row) => T) extends Itera
 }
 
 object QueryRunner {
-  private def rowDecoderFor(uri: URI, metadata: Soda2Metadata): JObject => Row = {
-    if(metadata.getOrElse("Legacy-Types", "false") == "true") {
-      new LegacyRowDecoder(uri, extractRawSchema(metadata))
-    } else {
-      new RowDecoder(uri, extractRawSchema(metadata))
+  def rowDecoderFor(uri: URI, metadata: Soda2Metadata): JObject => Row = {
+    val rawSchema = extractRawSchema(metadata)
+    metadata.getOrElse("Legacy-Types", "false") match {
+      case "true" => new LegacyRowDecoder(uri, rawSchema)
+      case _ => new RowDecoder(uri, rawSchema)
     }
   }
 
-  private def extractRawSchema(metadata: Soda2Metadata): Map[ColumnName, String] = {
+  def extractRawSchema(metadata: Soda2Metadata): Map[ColumnName, String] = {
     def extractStrings(field: String): Seq[String] = {
       val jvalue = try { JsonUtil.parseJson[Seq[String]](metadata.getOrElse(field, throw new MissingMetadataField(field))) }
                    catch { case e: JsonReaderException => throw new MalformedMetadataField(field, "unable to parse as JSON", e) }
