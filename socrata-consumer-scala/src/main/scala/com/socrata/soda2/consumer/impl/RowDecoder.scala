@@ -46,8 +46,8 @@ class RowDecoder(datasetBase: URI, schema: Map[ColumnName, SodaType]) extends (J
 
     def asJObject = rawRow
 
-    def asMap = rawRow.map { case (k, _) =>
+    def asMap = schema.map { case (k, _) =>
       k -> apply(k)
-    } (scala.collection.breakOut)
+    }
   }
 }

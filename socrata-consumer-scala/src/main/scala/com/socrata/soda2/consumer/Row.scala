@@ -24,5 +24,5 @@ trait Row {
   def asJObject: JObject
 
   /** Provides a view of the entire row as a raw JSON object */
-  def asMap: Map[String, Option[SodaValue]]
+  def asMap: Map[ColumnName, Option[SodaValue]]
 }
