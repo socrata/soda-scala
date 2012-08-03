@@ -5,10 +5,13 @@ import java.net.URI
 
 import com.rojoma.json.ast.{JString, JObject}
 
-import com.socrata.soda2.{ColumnNameLike, ColumnName}
-import com.socrata.soda2.values.{SodaValue, SodaType}
+import com.socrata.soda2.{UnknownTypeException, ColumnNameLike, ColumnName}
+import com.socrata.soda2.values._
 
 class RowDecoder(datasetBase: URI, schema: Map[ColumnName, SodaType]) extends (JObject => Row) {
+  def this(datasetBase: URI, rawSchema: Map[ColumnName, String])(implicit disambiguator: QueryDisambiguator) =
+    this(datasetBase, RowDecoder.cookSchema(rawSchema))
+
   def apply(rawRow: JObject): Row = new Row {
     def columnTypes = schema
 
@@ -50,4 +53,28 @@ class RowDecoder(datasetBase: URI, schema: Map[ColumnName, SodaType]) extends (J
       k -> apply(k)
     }
   }
+}
+
+object RowDecoder {
+  def cookSchema(rawSchema: Map[ColumnName, String]) =
+    rawSchema.mapValues(conversionForType).toMap
+
+  val conversionForType: String => SodaType = { rawType: String =>
+    typeMap.getOrElse(rawType, throw new UnknownTypeException(rawType))
+  }
+
+  private val typeMap = Map(
+    "string" -> SodaString,
+    "blob" -> SodaBlob,
+    "link" -> SodaLink,
+    "number" -> SodaNumber,
+    "double" -> SodaDouble,
+    "money" -> SodaMoney,
+    "geospatial" -> SodaGeospatial,
+    "location" -> SodaLocation,
+    "boolean" -> SodaBoolean,
+    "timestamp" -> SodaTimestamp,
+    "array" -> SodaArray,
+    "object" -> SodaObject
+  )
 }

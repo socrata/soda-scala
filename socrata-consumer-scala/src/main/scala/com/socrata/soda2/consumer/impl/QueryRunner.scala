@@ -3,7 +3,7 @@ package impl
 
 import java.net.URI
 
-import com.rojoma.json.ast.JString
+import com.rojoma.json.ast.{JObject, JString}
 import com.rojoma.json.util.JsonUtil
 import com.rojoma.json.io.JsonReaderException
 
@@ -21,7 +21,7 @@ abstract class QueryRunner(lowLevel: LowLevel) {
   def iterate[T](iteratee: Iteratee[Row, T]): Future[T] =
     executeQuery { (uri, metadata) =>
       new CharJArrayElementEnumeratee(
-        new JValueRowEnumeratee(new LegacyRowDecoder(uri, extractRawSchema(metadata)), iteratee),
+        new JValueRowEnumeratee(rowDecoderFor(uri, metadata), iteratee),
         { e => throw new MalformedJsonWhileReadingRowsException(e) })
     }
 
@@ -51,6 +51,14 @@ private [impl] class FoldingIteratee[T](seed: T, f: (T, Row) => T) extends Itera
 }
 
 object QueryRunner {
+  private def rowDecoderFor(uri: URI, metadata: Soda2Metadata): JObject => Row = {
+    if(metadata.getOrElse("Legacy-Types", "false") == "true") {
+      new LegacyRowDecoder(uri, extractRawSchema(metadata))
+    } else {
+      new RowDecoder(uri, extractRawSchema(metadata))
+    }
+  }
+
   private def extractRawSchema(metadata: Soda2Metadata): Map[ColumnName, String] = {
     def extractStrings(field: String): Seq[String] = {
       val jvalue = try { JsonUtil.parseJson[Seq[String]](metadata.getOrElse(field, throw new MissingMetadataField(field))) }
