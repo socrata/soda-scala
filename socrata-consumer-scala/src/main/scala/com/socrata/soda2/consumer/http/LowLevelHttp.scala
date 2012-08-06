@@ -26,15 +26,15 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
     execute(uriForResource(resource), resource, getParameters, iteratee)
 
   def execute[T](uri: URI, originalResource: Resource, getParameters: Map[String, Seq[String]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
-    doGet(uri, originalResource, Some(getParameters), iteratee).flatMap(maybeRetry(uri, originalResource, Some(getParameters), iteratee, _))
+    doGet(uri, originalResource, Some(getParameters), iteratee)
 
   def executeJson[T](resource: Resource, body: JValue, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
     executeJson(uriForResource(resource), resource, body, iteratee)
 
   def executeJson[T](uri: URI, originalResource: Resource, body: JValue, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
-    doPost(uri, originalResource, body, iteratee).flatMap(maybeRetryJson(uri, originalResource, body, iteratee, _))
+    doPost(uri, originalResource, body, iteratee)
 
-  def doGet[T](uri: URI, originalResource: Resource, queryParameters: Option[Map[String, Seq[String]]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[Retryable[T]] = {
+  def doGet[T](uri: URI, originalResource: Resource, queryParameters: Option[Map[String, Seq[String]]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] = {
     val builder = client.prepareGet(uri.toURL.toString).
       maybeSetQueryParametersS(queryParameters).
       setFollowRedirects(true).
@@ -42,10 +42,12 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
       authorize(authorization)
     log.debug("Making request to {}", uri)
     queryParameters.foreach{ p => log.debug("With query parameters {}", com.rojoma.json.util.JsonUtil.renderJson(p)) }
-    builder.makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _))))
+    builder.
+      makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _)))).
+      flatMap(maybeRetry(uri, originalResource, queryParameters, iteratee, _))
   }
 
-  def doPost[T](uri: URI, originalResource: Resource, body: JValue, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[Retryable[T]] = {
+  def doPost[T](uri: URI, originalResource: Resource, body: JValue, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] = {
     val builder = client.preparePost(uri.toString).
       setFollowRedirects(true).
       setHeader("Accept", "application/json").
@@ -53,7 +55,9 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
       authorize(authorization).
       setBody(CompactJsonWriter.toString(body).getBytes("utf-8"))
     log.debug("Making request to {}", uri)
-    builder.makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _))))
+    builder.
+      makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _)))).
+      flatMap(maybeRetryJson(uri, originalResource, body, iteratee, _))
   }
 
   def bodyConsumer[T](headers: Headers, codec: Codec, iteratee: Soda2Metadata => CharIteratee[T]) = {
@@ -83,17 +87,17 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
       executionContext.in(newRequest.retryAfter) {
         newRequest match {
           case Retry(_, _) =>
-            doGet(uri, originalResource, getParameters, iteratee).flatMap(maybeRetry(uri, originalResource, getParameters, iteratee, _))
+            doGet(uri, originalResource, getParameters, iteratee)
           case RetryWithTicket(ticket, _, _) =>
             // If "uri" involved query parameters, this will kill them all in favor of just the ticket.  This
             // should be fine but if not we might need to extract them.  The only case I can think of where
             // this would matter is if a "redirect" request gets a "retry-with-ticket" response, which should
             // never ever happen.
             val newParameters = Some(getParameters.getOrElse(Map.empty[String, Seq[String]]) + ("ticket" -> Seq(ticket)))
-            doGet(uri, originalResource, newParameters, iteratee).flatMap(maybeRetry(uri, originalResource, newParameters, iteratee, _))
+            doGet(uri, originalResource, newParameters, iteratee)
           case Redirect(url, _, _) =>
             val target = uri.resolve(url)
-            doGet(target, originalResource, None, iteratee).flatMap(maybeRetry(target, originalResource, None, iteratee, _))
+            doGet(target, originalResource, None, iteratee)
         }
       }.flatten
   }
@@ -109,17 +113,17 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
       executionContext.in(newRequest.retryAfter) {
         newRequest match {
           case Retry(_, _) =>
-            executeJson(uri, originalResource, body, iteratee)
+            doPost(uri, originalResource, body, iteratee)
           case RetryWithTicket(ticket, _, _) =>
             // If "uri" involved query parameters, this will kill them all in favor of just the ticket.  This
             // should be fine but if not we might need to extract them.  Unlike the same case in "maybeRetry",
             // I can see this actually possibly happening -- but if it does, executeJson should grow a getParameters
             // parameter.
             val newParameters = Some(Map("ticket" -> Seq(ticket)))
-            doGet(uri, originalResource, newParameters, iteratee).flatMap(maybeRetry(uri, originalResource, newParameters, iteratee, _))
+            doGet(uri, originalResource, newParameters, iteratee)
           case Redirect(url, _, _) =>
             val target = uri.resolve(url)
-            doGet(target, originalResource, None, iteratee).flatMap(maybeRetry(target, originalResource, None, iteratee, _))
+            doGet(target, originalResource, None, iteratee)
         }
       }.flatten
   }
