@@ -26,7 +26,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
     execute(uriForResource(resource), resource, getParameters, iteratee)
 
   def execute[T](uri: URI, originalResource: Resource, getParameters: Map[String, Seq[String]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
-    doGet(uri, originalResource, Some(getParameters), iteratee).flatMap(maybeRetry(uri, originalResource, getParameters, iteratee, _))
+    doGet(uri, originalResource, Some(getParameters), iteratee).flatMap(maybeRetry(uri, originalResource, Some(getParameters), iteratee, _))
 
   def executeJson[T](resource: Resource, body: JValue, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
     executeJson(uriForResource(resource), resource, body, iteratee)
@@ -74,7 +74,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
   def uriForResource(resource: Resource) =
     new URL(protocol, host, port, "/id/" + resource.toString).toURI
 
-  def maybeRetry[T](uri: URI, originalResource: Resource, getParameters: Map[String, Seq[String]], iteratee: (URI, Soda2Metadata) => CharIteratee[T], x: Retryable[T]): Future[T] = x match {
+  def maybeRetry[T](uri: URI, originalResource: Resource, getParameters: Option[Map[String, Seq[String]]], iteratee: (URI, Soda2Metadata) => CharIteratee[T], x: Retryable[T]): Future[T] = x match {
     case Right(result) =>
       Future.now(result)
     case Left(newRequest) =>
@@ -83,16 +83,23 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
       executionContext.in(newRequest.retryAfter) {
         newRequest match {
           case Retry(_, _) =>
-            execute(uri, originalResource, getParameters, iteratee)
+            doGet(uri, originalResource, getParameters, iteratee).flatMap(maybeRetry(uri, originalResource, getParameters, iteratee, _))
           case RetryWithTicket(ticket, _, _) =>
-            execute(uri, originalResource, getParameters + ("ticket" -> Seq(ticket)), iteratee)
+            // If "uri" involved query parameters, this will kill them all in favor of just the ticket.  This
+            // should be fine but if not we might need to extract them.  The only case I can think of where
+            // this would matter is if a "redirect" request gets a "retry-with-ticket" response, which should
+            // never ever happen.
+            val newParameters = Some(getParameters.getOrElse(Map.empty[String, Seq[String]]) + ("ticket" -> Seq(ticket)))
+            doGet(uri, originalResource, newParameters, iteratee).flatMap(maybeRetry(uri, originalResource, newParameters, iteratee, _))
           case Redirect(url, _, _) =>
             val target = uri.resolve(url)
-            doGet(target, originalResource, None, iteratee).flatMap(maybeRetry(target, originalResource, getParameters, iteratee, _))
+            doGet(target, originalResource, None, iteratee).flatMap(maybeRetry(target, originalResource, None, iteratee, _))
         }
       }.flatten
   }
 
+  // Ick; this is pretty much identical with maybeRetry.  This should be refactored to eliminate the
+  // duplication.
   def maybeRetryJson[T](uri: URI, originalResource: Resource, body: JValue, iteratee: (URI, Soda2Metadata) => CharIteratee[T], x: Retryable[T]): Future[T] = x match {
     case Right(result) =>
       Future.now(result)
@@ -104,10 +111,15 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
           case Retry(_, _) =>
             executeJson(uri, originalResource, body, iteratee)
           case RetryWithTicket(ticket, _, _) =>
-            execute(uri, originalResource, Map("ticket" -> Seq(ticket)), iteratee)
+            // If "uri" involved query parameters, this will kill them all in favor of just the ticket.  This
+            // should be fine but if not we might need to extract them.  Unlike the same case in "maybeRetry",
+            // I can see this actually possibly happening -- but if it does, executeJson should grow a getParameters
+            // parameter.
+            val newParameters = Some(Map("ticket" -> Seq(ticket)))
+            doGet(uri, originalResource, newParameters, iteratee).flatMap(maybeRetry(uri, originalResource, newParameters, iteratee, _))
           case Redirect(url, _, _) =>
             val target = uri.resolve(url)
-            doGet(target, originalResource, None, iteratee).flatMap(maybeRetry(target, originalResource, Map.empty, iteratee, _))
+            doGet(target, originalResource, None, iteratee).flatMap(maybeRetry(target, originalResource, None, iteratee, _))
         }
       }.flatten
   }
