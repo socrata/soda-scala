@@ -26,8 +26,35 @@ class EnrichedRequestBuilder[T <: RequestBuilderBase[T]](b: T) {
   def setQueryParametersS(params: Map[String, Seq[String]]) =
     b.setQueryParameters(new FluentStringsMap(params.mapValues(_.asJavaCollection).asJava))
 
+  /** Augment any existing query parameters with the given ones. */
+  def addQueryParameters(params: Map[String, Seq[String]]) = {
+    for {
+      (k, vs) <- params
+      v <- vs
+    } b.addQueryParameter(k, v)
+    b
+  }
+
   /** Replace any existing query parameters with the given ones, if not None, leaving them
    * alone if it is. */
   def maybeSetQueryParametersS(params: Option[Map[String, Seq[String]]]) =
     params.map(setQueryParametersS).getOrElse(b)
+
+  /** Replace any existing form parameters with the given ones. */
+  def setParametersS(params: Map[String, Seq[String]]) =
+    b.setParameters(new FluentStringsMap(params.mapValues(_.asJavaCollection).asJava))
+
+  /** Augment any existing form parameters with the given ones. */
+  def addParameters(params: Map[String, Seq[String]]) = {
+    for {
+      (k, vs) <- params
+      v <- vs
+    } b.addParameter(k, v)
+    b
+  }
+
+  /** Replace any existing form parameters with the given ones, if not None, leaving them
+   * alone if it is. */
+  def maybeSetParametersS(params: Option[Map[String, Seq[String]]]) =
+    params.map(setParametersS).getOrElse(b)
 }
