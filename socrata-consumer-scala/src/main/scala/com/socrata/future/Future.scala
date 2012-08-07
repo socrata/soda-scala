@@ -25,6 +25,18 @@ object Future {
     case e: Throwable =>
       new SimpleFailureFuture(e)
   }
+
+  def sequence[T](futures: Seq[Future[T]]): Future[Seq[T]] = {
+    def loop(done: List[T], remaining: List[Future[T]]): Future[Seq[T]] = remaining match {
+      case hd :: tl =>
+        hd.flatMap { hdValue =>
+          loop(hdValue :: done, tl)
+        }
+      case Nil =>
+        now(done.reverse)
+    }
+    loop(Nil, futures.toList)
+  }
 }
 
 trait Future[+A] {
