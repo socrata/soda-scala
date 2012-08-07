@@ -13,7 +13,7 @@ import com.socrata.soda2.consumer.LowLevel
 import com.socrata.soda2.consumer.impl.ResultProducer
 import com.socrata.soda2.http._
 import com.socrata.future.{ExecutionContext, Future}
-import com.socrata.http.{Authorization, Headers}
+import com.socrata.http.{JsonEntityWriter, Authorization, Headers}
 import com.socrata.http.implicits._
 import com.socrata.iteratee.CharIteratee
 import com.socrata.soda2.{Resource, Soda2Metadata}
@@ -53,7 +53,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
       setHeader("Accept", "application/json").
       setHeader("Content-type", "application/json; charset=utf-8").
       authorize(authorization).
-      setBody(CompactJsonWriter.toString(body).getBytes("utf-8"))
+      setBody(new JsonEntityWriter(body))
     log.debug("Making request to {}", uri)
     builder.
       makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _)))).
