@@ -6,14 +6,14 @@ import com.rojoma.json.ast.JValue
 import com.rojoma.json.io.JsonReaderException
 
 import com.socrata.http.BodyConsumer
-import com.socrata.iteratee.{IdentityIteratee, CharJValueEnumeratee, ByteCharEnumeratee, ByteIteratee}
+import com.socrata.iteratee.{JValueIteratee, ByteCharEnumeratee, ByteIteratee}
 import com.socrata.soda2.MalformedResponseJsonException
 
 /** A bodyConsumer which expects to read a single [[com.rojoma.json.ast.JValue]] out of an
  * HTTP response. */
 class SingleJValueBodyConsumer(iteratee: ByteIteratee[JValue]) extends BodyConsumer[JValue] {
   /** @param codec A codec for the body's content encoding */
-  def this(codec: Codec) = this(new ByteCharEnumeratee(codec, new CharJValueEnumeratee(new IdentityIteratee, SingleJValueBodyConsumer.decodeError)))
+  def this(codec: Codec) = this(new ByteCharEnumeratee(codec, new JValueIteratee(SingleJValueBodyConsumer.decodeError)))
 
   def apply(bytes: Array[Byte], isLast: Boolean): Either[BodyConsumer[JValue], JValue] = {
     iteratee.process(bytes) match {
