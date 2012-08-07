@@ -18,24 +18,24 @@ trait LowLevel {
    * [[com.socrata.iteratee.Iteratee]].
    *
    * @param resource The resource to retrieve.
-   * @param getParameters The values to feed into query.
+   * @param parameters The values to feed into query.
    * @param iteratee A handler for the response. */
-  def execute[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T]
+  def get[T](resource: Resource, parameters: Map[String, Seq[String]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T]
 
   /** Executes a GET query against a SODA2 server and feeds the character data returned into the given
    * [[com.socrata.iteratee.Iteratee]].
    *
    * @param resource The resource to retrieve.
-   * @param getParameters The values to feed into query.
+   * @param parameters The values to feed into query.
    * @param iteratee A handler for the response. */
-  def execute[T](resource: Resource, getParameters: Map[String, String], iteratee: (URI, Soda2Metadata) => CharIteratee[T])(implicit stupidErasure: QueryDisambiguator): Future[T] =
-    execute(resource, getParameters.mapValues(Seq(_)), iteratee)
+  def get[T](resource: Resource, parameters: Map[String, String], iteratee: (URI, Soda2Metadata) => CharIteratee[T])(implicit stupidErasure: QueryDisambiguator): Future[T] =
+    get(resource, parameters.mapValues(Seq(_)), iteratee)
 
   /** Executes a POST query against a SODA2 server and feeds the character data returned into the given
    * [[com.socrata.iteratee.Iteratee]].
    *
-   * @param resource The resource to which to send JSON.
+   * @param resource The resource to which to send the JSON.
    * @param jvalue The JSON to serialize into the request.
    * @param iteratee A handler for the response. */
-  def executeJson[T](resource: Resource, jvalue: JValue, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T]
+  def postJson[T](resource: Resource, jvalue: JValue, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T]
 }

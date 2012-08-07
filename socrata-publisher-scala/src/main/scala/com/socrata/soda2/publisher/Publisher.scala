@@ -12,7 +12,7 @@ trait Publisher extends Consumer {
   import Publisher._
 
   def upsert[R, C](resource: R, additions: Seq[Map[C, SodaValue]] = Nil, deletions: TraversableOnce[Long] = Nil)(implicit ev : ResourceLike[R], ev2: ColumnNameLike[C]): Future[UpsertResponse] = {
-    lowLevel.executeJson(
+    lowLevel.postJson(
       ev.asResource(resource),
       JArray(additions.map(toAdditionObject[C]) ++ deletions.map(toDeleteObject)),
       { (_, _) =>

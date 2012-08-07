@@ -39,7 +39,7 @@ class Consumer(val lowLevel: LowLevel) {
 
 class SimpleQuery(lowLevel: LowLevel, resource: Resource, parameters: Seq[(String, String)]) extends QueryRunner(lowLevel) {
   protected def executeQuery[T](iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
-    lowLevel.execute(
+    lowLevel.get(
       resource,
       parameters.toMap,
       iteratee)
@@ -47,7 +47,7 @@ class SimpleQuery(lowLevel: LowLevel, resource: Resource, parameters: Seq[(Strin
 
 class SoQLQuery(lowLevel: LowLevel, resource: Resource, soql: String) extends QueryRunner(lowLevel) {
   protected def executeQuery[T](iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
-    lowLevel.execute(
+    lowLevel.get(
       resource,
       Map("$query" -> soql),
       iteratee)
