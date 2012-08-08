@@ -82,8 +82,11 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
     if(java.lang.Boolean.getBoolean("com.socrata.soda2.forceHttp")) "http"
     else "https"
 
+  def uriForPath(path: String) =
+    new URL(protocol, host, port, path).toURI
+
   def uriForResource(resource: Resource) =
-    new URL(protocol, host, port, "/id/" + resource.toString).toURI
+    uriForPath("/id/" + resource)
 
   def maybeRetry[T](x: Retryable[T])(onRetry: NewRequest => Future[T]): Future[T] = x match {
     case Right(result) =>
@@ -111,15 +114,14 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
       get(target, originalResource, None, iteratee)
   }
 
+  def extractParametersFrom(uri: URI): java.util.Map[String, java.util.List[String]] =
+    client.prepareGet(uri.toString).build().getQueryParams // ick, but it works!
+
   def maybeRetryForm[T](uri: URI, originalResource: Resource, formParameters: Option[Map[String, Seq[String]]], iteratee: (URI, Soda2Metadata) => CharIteratee[T], x: Retryable[T]): Future[T] = maybeRetry(x) {
     case Retry(_, _) =>
       postForm(uri, originalResource, formParameters, iteratee)
     case RetryWithTicket(ticket, _, _) =>
-      // If "uri" had baked-in query parameters, this will kill them all in favor of just the ticket.  This
-      // should be fine but if not we might need to extract them.  I can't think of a case where that
-      // could happen -- even in the case Redirect-followed-by-RetryWithTicket described above in maybeRetryGet,
-      // we'd have done a GET here first, so we wouldn't be executing in this place for the second 202.
-      val newParameters = Some(Map("ticket" -> Seq(ticket)))
+      val newParameters = Some(extractParametersFrom(uri).asScala.mapValues(_.asScala).toMap + ("ticket" -> Seq(ticket)))
       get(uri, originalResource, newParameters, iteratee)
     case Redirect(url, _, _) =>
       val target = uri.resolve(url)
@@ -130,15 +132,50 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
     case Retry(_, _) =>
       postJson(uri, originalResource, queryParameters, body, iteratee)
     case RetryWithTicket(ticket, _, _) =>
-      // If "uri" had baked-in query parameters, this will kill them all in favor of just the ticket.  This
-      // should be fine but if not we might need to extract them.  I can't think of a case where that
-      // could happen -- even in the case Redirect-followed-by-RetryWithTicket described above in maybeRetryGet,
-      // we'd have done a GET here first, so we wouldn't be executing in this place for the second 202.
       val newParameters = Some(queryParameters.getOrElse(Map.empty[String, Seq[String]]) + ("ticket" -> Seq(ticket)))
       get(uri, originalResource, newParameters, iteratee)
     case Redirect(url, _, _) =>
       val target = uri.resolve(url)
       get(target, originalResource, None, iteratee)
+  }
+
+  def legacyMakeWorkingCopy[T](resource: Resource, copyRows: Boolean, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] = {
+    val method = if(copyRows) "copy" else "copySchema"
+    postForm(uriForPath("/views/" + resource + "/publication?method=" + method), resource, None, iteratee)
+  }
+
+  def legacyPublish[T](resource: Resource, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] = {
+    awaitNoPendingGeocodesFor(resource).flatMap { _ =>
+      postForm(uriForPath("/views/" + resource + "/publication"), resource, None, iteratee)
+    }
+  }
+
+  // uggggghh.  I hate SODA1.
+  def awaitNoPendingGeocodesFor(resource: Resource): Future[Unit] = {
+    import com.rojoma.json.ast._
+    import com.socrata.iteratee.JValueIteratee
+    import com.socrata.soda2.{InvalidResponseJsonException, MalformedResponseJsonException}
+    val jValue = get(
+      uriForPath("/api/geocoding"), resource, Some(Map("method" -> Seq("pending"), "id" -> Seq(resource.toString))),
+      { (_, _) => new JValueIteratee(e => throw new MalformedResponseJsonException("Non-JValue from pending geocode poll", e)) })
+    jValue.flatMap {
+      case obj: JObject =>
+        obj.get("view") match {
+          case Some(JNumber(n)) if n == BigDecimal(0) =>
+            log.debug("No pending geocodes; the publish can proceed")
+            Future.now()
+          case Some(JNumber(n)) =>
+            // TODO: Progress callback or something
+            log.debug("There are still {} pending geocodes; sleeping for 60s", n)
+            executionContext.in(60) {
+              awaitNoPendingGeocodesFor(resource)
+            }.flatten
+          case _ =>
+            throw new InvalidResponseJsonException(obj, "Uninterpretable JSON from pending geocode poll")
+        }
+      case datum =>
+        throw new InvalidResponseJsonException(datum, "Uninterpretable JSON from pending geocode poll")
+    }
   }
 }
 

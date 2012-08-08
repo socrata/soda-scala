@@ -38,4 +38,12 @@ trait LowLevel {
    * @param jvalue The JSON to serialize into the request.
    * @param iteratee A handler for the response. */
   def postJson[T](resource: Resource, jvalue: JValue, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T]
+
+  // All the remaining methods are actually SODA1 methods that we must support but
+  // which do not map neatly into a simple operation-on-a-Resource.  Instead they
+  // use the given Resources to construct URLs corresponding to legacy SODA1 endpoints
+  // and manipulate them.
+
+  def legacyMakeWorkingCopy[T](resource: Resource, copyRows: Boolean, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T]
+  def legacyPublish[T](workingCopy: Resource, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T]
 }
