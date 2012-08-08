@@ -69,13 +69,14 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
 
   def bodyConsumer[T](headers: Headers, codec: Codec, iteratee: Soda2Metadata => CharIteratee[T]) = {
     val prefix = "x-soda2-"
-    val soda2Metadata: java.util.Map[String, java.util.List[String]] = new com.ning.http.client.FluentCaseInsensitiveStringsMap
+    val soda2Metadata = new com.ning.http.client.FluentCaseInsensitiveStringsMap
     for {
-      (h, vs) <- headers
-      if(h.toLowerCase.startsWith(prefix))
-    } soda2Metadata.put(h.substring(prefix.length), java.util.Collections.singletonList(vs.last))
+      (h, vs) <- headers if h.toLowerCase.startsWith(prefix)
+    } soda2Metadata.add(h.substring(prefix.length), vs.asJavaCollection)
 
-    new ResultProducer(codec, iteratee(soda2Metadata.asScala.mapValues(_.get(0))))
+    val metadataAsMap: java.util.Map[String, java.util.List[String]] = soda2Metadata
+
+    new ResultProducer(codec, iteratee(metadataAsMap.asScala.mapValues(_.asScala.last)))
   }
 
   val protocol =
