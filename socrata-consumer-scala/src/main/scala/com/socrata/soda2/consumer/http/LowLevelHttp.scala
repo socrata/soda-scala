@@ -7,7 +7,6 @@ import java.net.{URI, URL}
 
 import com.ning.http.client.AsyncHttpClient
 import com.rojoma.json.ast.JValue
-import com.rojoma.json.io.CompactJsonWriter
 
 import com.socrata.soda2.consumer.LowLevel
 import com.socrata.soda2.consumer.impl.ResultProducer
@@ -23,7 +22,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
   import LowLevelHttp._
 
   def get[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
-  get(uriForResource(resource), resource, Some(getParameters), iteratee)
+    get(uriForResource(resource), resource, Some(getParameters), iteratee)
 
   def get[T](uri: URI, originalResource: Resource, queryParameters: Option[Map[String, Seq[String]]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] = {
     val builder = client.prepareGet(uri.toURL.toString).
