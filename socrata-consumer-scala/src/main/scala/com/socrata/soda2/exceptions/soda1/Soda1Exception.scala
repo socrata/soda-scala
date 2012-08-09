@@ -18,6 +18,7 @@ class Soda1UnacceptableResponseTypeException(resource: Resource, code: String, m
 class Soda1ConflictException(resource: Resource, code: String, message: Option[String]) extends Soda1Exception(resource, code, message)
 class Soda1InternalServerErrorException(resource: Resource, code: String, message: Option[String]) extends Soda1Exception(resource, code, message)
 class Soda1BadGatewayException(resource: Resource, code: String, message: Option[String]) extends Soda1Exception(resource, code, message)
+class Soda1GatewayTimeoutException(resource: Resource, code: String, message: Option[String]) extends Soda1Exception(resource, code, message)
 class Soda1UnknownException(val status: Int, resource: Resource, code: String, message: Option[String]) extends Soda1Exception(resource, code, message)
 
 object Soda1Exception {
@@ -30,6 +31,7 @@ object Soda1Exception {
     case 409 => throw new Soda1ConflictException(resource, code, message)
     case 500 => throw new Soda1InternalServerErrorException(resource, code, message)
     case 502  => throw new Soda1BadGatewayException(resource, code, message)
+    case 504  => throw new Soda1GatewayTimeoutException(resource, code, message)
     case other => throw new Soda1UnknownException(other, resource, code, message)
   }
 }
