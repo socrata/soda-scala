@@ -6,6 +6,7 @@ import com.rojoma.json.util.SimpleJsonCodecBuilder
 import com.rojoma.json.codec.JsonCodec
 
 import com.socrata.soda2.exceptions.soda1.Soda1Exception
+import com.socrata.soda2.exceptions.ServerException
 import com.socrata.http.{BodyConsumer, HeadersConsumer, Headers}
 import com.socrata.soda2.{Resource, InvalidResponseJsonException}
 
@@ -23,22 +24,36 @@ private[http] class ErrorHeadersConsumer(resource: Resource, code: Int) extends 
         throw new InvalidResponseJsonException(other, "Error response body was not an object")
     })
   }
-
-  def processError(errorObject: JObject): Nothing = {
-    error("NYI")
-  }
 }
 
 private[http] object ErrorHeadersConsumer {
+  case class Error(code: String, message: String, data: Option[JObject])
+  implicit val errorCodec = SimpleJsonCodecBuilder[Error].gen(
+    "code", _.code,
+    "message", _.message,
+    "data", _.data)
+
+  def processError(errorObject: JObject): Nothing = {
+    JsonCodec.fromJValue[Error](errorObject) match {
+      case Some(Error(code, message, data)) =>
+        throw ServerException(code, message, data)
+      case None =>
+        badErrorBody(errorObject)
+    }
+  }
+
   case class LegacyError(code: Option[String], message: Option[String])
   implicit val legacyCodec = SimpleJsonCodecBuilder[LegacyError].gen("code", _.code, "message", _.message)
 
-  def processLegacyError(resource: Resource, code: Int, errorObject: JObject): Nothing = {
+  def processLegacyError(resource: Resource, status: Int, errorObject: JObject): Nothing = {
     JsonCodec.fromJValue[LegacyError](errorObject) match {
-      case Some(legacyError) =>
-        throw Soda1Exception(resource, code, legacyError.code.getOrElse("internal error"), legacyError.message)
+      case Some(LegacyError(code, message)) =>
+        throw Soda1Exception(resource, status, code.getOrElse("internal error"), message)
       case None =>
-        throw new InvalidResponseJsonException(errorObject, "Response body was not interpretable as an error")
+        badErrorBody(errorObject)
     }
   }
+
+  def badErrorBody(errorObject: JObject): Nothing =
+    throw new InvalidResponseJsonException(errorObject, "Response body was not interpretable as an error")
 }

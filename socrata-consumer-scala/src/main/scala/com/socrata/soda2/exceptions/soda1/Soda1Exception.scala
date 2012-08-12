@@ -1,6 +1,7 @@
 package com.socrata.soda2.exceptions.soda1
 
-import com.socrata.soda2.{Resource, SodaException}
+import com.socrata.soda2.Resource
+import com.socrata.soda2.exceptions.ServerException
 
 /** The root of the hierarchy representing legacy SODA1 exceptions.
  *
@@ -8,7 +9,7 @@ import com.socrata.soda2.{Resource, SodaException}
  * error codes.  These will be phased out, but until that happens this exception and its subclasses
  * represent those codes.
  */
-abstract class Soda1Exception(val resource: Resource, val code: String, message: Option[String]) extends SodaException(message.map(resource + ": " + _).getOrElse(resource.toString))
+abstract class Soda1Exception(val resource: Resource, val code: String, message: Option[String]) extends ServerException(message.map(resource + ": " + _).getOrElse(resource.toString))
 
 class Soda1InvalidRequestException(resource: Resource, code: String, message: Option[String]) extends Soda1Exception(resource, code, message)
 class Soda1ForbiddenException(resource: Resource, code: String, message: Option[String]) extends Soda1Exception(resource, code, message)
