@@ -18,7 +18,7 @@ private[consumer] class LegacyRowDecoder(datasetBase: URI, rawSchema: Map[Column
   val schema = rawSchema.map { case (k,v) => k.toString -> v }
 
   def apply(rawRow: JObject): Row = {
-    val soda2ified = rawRow.fields.map { case (field, rawValue) =>
+    val soda2ified = rawRow.fields.collect { case (field, rawValue) if schema.contains(field) =>
       field -> conversionForValue(schema(field))(datasetBase, rawValue)
     }
     rowDecoder(JObject(soda2ified))

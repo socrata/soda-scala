@@ -2,11 +2,12 @@ package com.socrata.soda2.publisher
 
 import com.rojoma.json.ast._
 
-import com.socrata.soda2.consumer.Consumer
+import com.socrata.soda2.consumer.{JValueRowEnumeratee, Row, Consumer}
 import com.socrata.soda2.values.SodaValue
 import com.socrata.soda2.{Resource, ColumnNameLike, MalformedResponseJsonException, ResourceLike}
-import com.socrata.iteratee.CharJValueEnumeratee
+import com.socrata.iteratee.{IdentityIteratee, CharJValueEnumeratee}
 import com.socrata.future.Future
+import com.socrata.soda2.consumer.impl.QueryRunner
 
 trait Publisher extends Consumer {
   import Publisher._
@@ -18,6 +19,15 @@ trait Publisher extends Consumer {
       { (_, _) =>
         new CharJValueEnumeratee(
           impl.UpsertResponseIteratee,
+          { e => throw new MalformedResponseJsonException("Malformed JSON encountered while reading upsert response", e) }) })
+
+  def upsertSingle[R, C](resource: R, addition: Map[C, SodaValue])(implicit ev : ResourceLike[R], ev2: ColumnNameLike[C]): Future[Row] =
+    lowLevel.postJson(
+      ev.asResource(resource),
+      toAdditionObject(addition),
+      { (uri, metadata) =>
+        new CharJValueEnumeratee(
+          new JValueRowEnumeratee(QueryRunner.rowDecoderFor(uri, metadata), new IdentityIteratee),
           { e => throw new MalformedResponseJsonException("Malformed JSON encountered while reading upsert response", e) }) })
 
   def makeWorkingCopy[R](resource: R, copyRows: Boolean = true)(implicit ev: ResourceLike[R]): Future[Resource] =
