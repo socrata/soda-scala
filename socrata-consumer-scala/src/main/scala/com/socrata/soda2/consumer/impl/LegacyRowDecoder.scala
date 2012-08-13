@@ -79,12 +79,12 @@ private[consumer] object LegacyRowDecoder {
     "date" -> epoch2iso _, // FIXME: this needs to return a "fixed" timestamp
     "calendar_date" -> id,
     "location" -> loc2loc,
-    "url" -> id,
+    "url" -> url2obj,
     "email" -> id,
     "checkbox" -> id,
     "flag" -> id,
     "stars" -> stars2num,
-    "phone"-> id,
+    "phone"-> phone2obj,
     "drop_down_list" -> id,
     "photo" -> photo2link _,
     "document" -> doc2obj,
@@ -116,7 +116,6 @@ private[consumer] object LegacyRowDecoder {
 
   def loc2loc(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JObject(fields) =>
-      if(fields.isEmpty) return JNull
       val lat = fields.getOrElse("latitude", JNull)
       val lon = fields.getOrElse("longitude", JNull)
       val ha = try {
@@ -125,7 +124,28 @@ private[consumer] object LegacyRowDecoder {
         case e: JsonReaderException =>
           throw new MalformedJsonWhileReadingRowsException(e)
       }
-      JArray(Seq(lat, lon, ha))
+      if(lat == JNull && lon == JNull && ha == JNull) JNull
+      else JArray(Seq(lat, lon, ha))
+    case _ =>
+      error("NYI")
+  }
+
+  def url2obj(fieldName: String, uri: URI, value: JValue): JValue = value match {
+    case JObject(fields) =>
+      val desc = fields.getOrElse("description", JNull)
+      val url = fields.getOrElse("url", JNull)
+      if(desc == JNull && url == JNull) JNull
+      else JObject(Map("Url" -> url, "Description" -> desc))
+    case _ =>
+      error("NYI")
+  }
+
+  def phone2obj(fieldName: String, uri: URI, value: JValue): JValue = value match {
+    case JObject(fields) =>
+      val num = fields.getOrElse("phone_number", JNull)
+      val typ = fields.getOrElse("phone_type", JNull)
+      if(num == JNull && typ == JNull) JNull
+      else JObject(Map("PhoneNumber" -> num, "Type" -> typ))
     case _ =>
       error("NYI")
   }
@@ -155,17 +175,29 @@ private[consumer] object LegacyRowDecoder {
 
   def doc2obj(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JObject(fields) =>
-      if(fields.isEmpty) return JNull
       val result = new scala.collection.mutable.HashMap[String, JValue]
       fields.get("file_id") match {
-        case Some(JString(fileId)) => result += "url" -> JString(uri.resolve("/api/file_data/" + fileId).toString)
+        case Some(JString(fileId)) => result += "Url" -> JString(uri.resolve("/api/file_data/" + fileId).toString)
+        case None => // nothing
+        case _ => error("nyi")
+      }
+      fields.get("content_type") match {
+        case Some(JString(contentType)) => result += "MimeType" -> JString(contentType)
+        case None => // nothing
         case _ => error("nyi")
       }
       fields.get("filename") match {
-        case Some(JString(filename)) => result += "filename" -> JString(filename)
+        case Some(JString(filename)) => result += "FileName" -> JString(filename)
+        case None => // nothing
         case _ => error("nyi")
       }
-      JObject(result)
+      fields.get("size") match {
+        case Some(JNumber(size)) => result += "Size" -> JNumber(size)
+        case None => // nothing
+        case _ => error("nyi")
+      }
+      if(result.isEmpty) JNull
+      else JObject(result)
     case _ => error("nyi")
   }
 }
