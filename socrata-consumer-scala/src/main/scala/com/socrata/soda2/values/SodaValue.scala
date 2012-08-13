@@ -30,6 +30,7 @@ case class SodaString(value: String) extends SodaValue {
 
 case object SodaString extends SodaType with (String => SodaString) {
   def convertFrom(value: JValue) = JsonCodec[String].decode(value).map(SodaString)
+  override def toString = "SodaString"
 }
 
 case class SodaBlob(uri: URI) extends SodaValue {
@@ -42,6 +43,7 @@ case object SodaBlob extends SodaType with (URI => SodaBlob) {
     val uri = URI.create(linkStr) // TODO: Catch exceptions
     SodaBlob(uri)
   }
+  override def toString = "SodaBlob"
 }
 
 case class SodaLink(uri: URI) extends SodaValue {
@@ -54,6 +56,7 @@ case object SodaLink extends SodaType with (URI => SodaLink) {
     val uri = URI.create(linkStr) // TODO: Catch exceptions
     SodaLink(uri)
   }
+  override def toString = "SodaLink"
 }
 
 case class SodaNumber(value: BigDecimal) extends SodaValue {
@@ -66,6 +69,7 @@ case object SodaNumber extends SodaType with (BigDecimal => SodaNumber) {
     val num = new java.math.BigDecimal(numStr) // TODO: Catch exceptions
     SodaNumber(num)
   }
+  override def toString = "SodaNumber"
 }
 
 case class SodaDouble(value: Double) extends SodaValue {
@@ -75,6 +79,7 @@ case class SodaDouble(value: Double) extends SodaValue {
 
 case object SodaDouble extends SodaType with (Double => SodaDouble) {
   def convertFrom(value: JValue) = JsonCodec[Double].decode(value).map(SodaDouble)
+  override def toString = "SodaDouble"
 }
 
 case class SodaMoney(value: BigDecimal) extends SodaValue {
@@ -87,6 +92,7 @@ case object SodaMoney extends SodaType with (BigDecimal => SodaMoney) {
     val num = new java.math.BigDecimal(numStr) // TODO: Catch exceptions
     SodaMoney(num)
   }
+  override def toString = "SodaMoney"
 }
 
 case class SodaGeospatial(value: JValue) extends SodaValue {
@@ -96,6 +102,7 @@ case class SodaGeospatial(value: JValue) extends SodaValue {
 
 case object SodaGeospatial extends SodaType with (JValue => SodaGeospatial) {
   def convertFrom(value: JValue) = if(value == JNull) None else Some(SodaGeospatial(value))
+  override def toString = "SodaGeospatial"
 }
 
 case class SodaLocation(address: Option[String], city: Option[String], state: Option[String], zip: Option[String], coordinates: Option[(Double, Double)]) extends SodaValue {
@@ -135,6 +142,8 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
   }
 
   def convertFrom(value: JValue) = JsonCodec[SodaLocation].decode(value)
+
+  override def toString = "SodaLocation"
 }
 
 case class SodaBoolean(value: Boolean) extends SodaValue {
@@ -144,6 +153,7 @@ case class SodaBoolean(value: Boolean) extends SodaValue {
 
 case object SodaBoolean extends SodaType with (Boolean => SodaBoolean) {
   def convertFrom(value: JValue) = JsonCodec[Boolean].decode(value).map(SodaBoolean)
+  override def toString = "SodaBoolean"
 }
 
 case class SodaTimestampFixed(value: DateTime) extends SodaValue {
@@ -167,6 +177,8 @@ case object SodaTimestampFixed extends SodaType with (DateTime => SodaTimestampF
       case _: IllegalArgumentException =>
         None
     }
+
+  override def toString = "SodaTimestampFixed"
 }
 
 case class SodaTimestampFloating(value: LocalDateTime) extends SodaValue {
@@ -189,6 +201,8 @@ case object SodaTimestampFloating extends SodaType with (LocalDateTime => SodaTi
 
   private def formatSodaTimestampFloating(ts: LocalDateTime) =
     ISODateTimeFormat.dateTimeNoMillis.print(ts)
+
+  override def toString = "SodaTimestampFloating"
 }
 
 case class SodaArray(value: JArray) extends SodaValue {
@@ -198,6 +212,7 @@ case class SodaArray(value: JArray) extends SodaValue {
 
 case object SodaArray extends SodaType with (JArray => SodaArray) {
   def convertFrom(value: JValue) = value.cast[JArray].map(SodaArray)
+  override def toString = "SodaArray"
 }
 
 case class SodaObject(value: JObject) extends SodaValue {
@@ -207,4 +222,5 @@ case class SodaObject(value: JObject) extends SodaValue {
 
 case object SodaObject extends SodaType with (JObject => SodaObject) {
   def convertFrom(value: JValue) = value.cast[JObject].map(SodaObject)
+  override def toString = "SodaObject"
 }

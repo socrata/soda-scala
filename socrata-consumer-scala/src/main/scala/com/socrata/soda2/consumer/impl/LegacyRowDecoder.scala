@@ -39,8 +39,8 @@ private[consumer] object LegacyRowDecoder {
     "double" -> k(SodaDouble),
     "money" -> k(SodaMoney),
     "percent" -> k(SodaNumber),
-    "date" -> k(SodaTimestampFixed),
-    "calendar_date" -> k(SodaTimestampFloating),
+    "date" -> k(SodaTimestamp),
+    "calendar_date" -> k(SodaTimestamp), // FIXME
     "location" -> k(SodaLocation),
     "url" -> k(SodaObject),
     "email" -> k(SodaString),
@@ -58,12 +58,12 @@ private[consumer] object LegacyRowDecoder {
 
   def selectMetadataType(columnName: String): SodaType = columnName match {
     case ":id" => SodaNumber
-    case ":created_at" => SodaTimestampFixed
+    case ":created_at" => SodaTimestamp
     case ":position" => SodaNumber
     case ":meta" => SodaString
     case ":created_meta" => SodaString
-    case ":updated_at" => SodaTimestampFixed
-    case ":updated_meta" => SodaTimestampFixed
+    case ":updated_at" => SodaTimestamp
+    case ":updated_meta" => SodaTimestamp
   }
 
   val id = (_: String, _: URI, v: JValue) => v
