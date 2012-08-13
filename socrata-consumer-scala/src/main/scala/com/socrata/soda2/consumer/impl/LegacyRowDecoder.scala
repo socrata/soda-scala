@@ -13,50 +13,63 @@ import com.rojoma.json.io.JsonReader
 private[consumer] class LegacyRowDecoder(datasetBase: URI, rawSchema: Map[ColumnName, String]) extends (JObject => Row) {
   import LegacyRowDecoder._
 
-  val rowDecoder = new RowDecoder(datasetBase, rawSchema.mapValues(conversionForType).toMap)
+  val rowDecoder = new RowDecoder(datasetBase, rawSchema.map(conversionForType).toMap)
 
   val schema = rawSchema.map { case (k,v) => k.toString -> v }
 
   def apply(rawRow: JObject): Row = {
     val soda2ified = rawRow.fields.collect { case (field, rawValue) if schema.contains(field) =>
-      field -> conversionForValue(schema(field))(datasetBase, rawValue)
+      field -> conversionForValue(schema(field))(field, datasetBase, rawValue)
     }
-    rowDecoder(JObject(soda2ified))
+    rowDecoder(JObject(soda2ified.filterNot(_._2  == JNull)))
   }
 }
 
 private[consumer] object LegacyRowDecoder {
-  val conversionForType: String => SodaType = { rawType: String =>
-    typeMap.getOrElse(rawType, throw new UnknownTypeException(rawType))
+  val conversionForType: ((ColumnName, String)) => (ColumnName, SodaType) = { case (col, rawType) =>
+    col -> typeMap.getOrElse(rawType, throw new UnknownTypeException(rawType))(col.toString)
   }
 
-  private val typeMap = Map(
-    "text" -> SodaString,
-    "html" -> SodaString,
-    "number" -> SodaNumber,
-    "double" -> SodaDouble,
-    "money" -> SodaMoney,
-    "percent" -> SodaNumber,
-    "date" -> SodaTimestamp,
-    "calendar_date" -> SodaTimestamp, // FIXME
-    "location" -> SodaLocation,
-    "url" -> SodaObject,
-    "email" -> SodaString,
-    "checkbox" -> SodaBoolean,
-    "flag" -> SodaString,
-    "stars" -> SodaNumber,
-    "phone"-> SodaObject,
-    "drop_down_list" -> SodaString,
-    "photo" -> SodaLink,
-    "document" -> SodaObject,
-    "nested_table" -> SodaObject
+  def k(x: SodaType) = (_: String) => x
+
+  private val typeMap = Map[String, String => SodaType] (
+    "text" -> k(SodaString),
+    "html" -> k(SodaString),
+    "number" -> k(SodaNumber),
+    "double" -> k(SodaDouble),
+    "money" -> k(SodaMoney),
+    "percent" -> k(SodaNumber),
+    "date" -> k(SodaTimestamp),
+    "calendar_date" -> k(SodaTimestamp), // FIXME
+    "location" -> k(SodaLocation),
+    "url" -> k(SodaObject),
+    "email" -> k(SodaString),
+    "checkbox" -> k(SodaBoolean),
+    "flag" -> k(SodaString),
+    "stars" -> k(SodaNumber),
+    "phone"-> k(SodaObject),
+    "drop_down_list" -> k(SodaString),
+    "photo" -> k(SodaLink),
+    "document" -> k(SodaObject),
+    "nested_table" -> k(SodaObject),
+    "meta_data" -> selectMetadataType _
     // TODO: dataset link, which is a wildly ill-thought-out misfeature
   )
 
-  val id = (_: URI, v: JValue) => v
+  def selectMetadataType(columnName: String): SodaType = columnName match {
+    case ":id" => SodaNumber
+    case ":created_at" => SodaTimestamp
+    case ":position" => SodaNumber
+    case ":meta" => SodaString
+    case ":created_meta" => SodaString
+    case ":updated_at" => SodaTimestamp
+    case ":updated_meta" => SodaTimestamp
+  }
+
+  val id = (_: String, _: URI, v: JValue) => v
 
   // map from SodaTypes to functions which convert (uri, JValue) pairs to JValues
-  val conversionForValue: String => (URI, JValue) => JValue = Map[String, (URI, JValue) => JValue] (
+  val conversionForValue: String => (String, URI, JValue) => JValue = Map[String, (String, URI, JValue) => JValue] (
     "text" -> id,
     "html" -> id,
     "number" -> id,
@@ -75,17 +88,35 @@ private[consumer] object LegacyRowDecoder {
     "drop_down_list" -> id,
     "photo" -> photo2link _,
     "document" -> doc2obj,
-    "nested_table" -> id
+    "nested_table" -> id,
+    "meta_data" -> metadata2thing _
   // TODO: dataset link, which is a wildly ill-thought-out misfeature
   )
 
-  def stars2num(uri: URI, value: JValue): JValue = value match {
+  def metadata2thing(fieldName: String, uri: URI, value: JValue): JValue = fieldName match {
+    case ":id" => value match {
+      case JNumber(x) => JString(x.toString)
+      case JNull => JNull
+    }
+    case ":created_at" => epoch2iso(fieldName, uri, value)
+    case ":position" => value match {
+      case JNumber(x) => JString(x.toString)
+      case JNull => JNull
+    }
+    case ":meta" => value
+    case ":created_meta" => value
+    case ":updated_at" => epoch2iso(fieldName, uri, value)
+    case ":updated_meta" => value
+  }
+
+  def stars2num(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JNumber(n) => JString(n.toString)
     case _ => error("NYI")
   }
 
-  def loc2loc(uri: URI, value: JValue): JValue = value match {
+  def loc2loc(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JObject(fields) =>
+      if(fields.isEmpty) return JNull
       JObject(fields.get("human_address") match {
         case Some(JString(ha)) => fields + ("human_address" -> JsonReader.fromString(ha))
         case None => fields
@@ -100,7 +131,7 @@ private[consumer] object LegacyRowDecoder {
     JString(epochFormatter.print(instant))
   }
 
-  def epoch2iso(uri: URI, value: JValue): JValue = value match {
+  def epoch2iso(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JString(num) =>
       try {
         formatEpoch(num.toLong * 1000L)
@@ -113,13 +144,14 @@ private[consumer] object LegacyRowDecoder {
     case _ => error("NYI")
   }
 
-  def photo2link(uri: URI, value: JValue): JValue = value match {
+  def photo2link(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JString(fileId) => JString(uri.resolve("/api/file_data/" + fileId).toString)
     case _ => error("nyi")
   }
 
-  def doc2obj(uri: URI, value: JValue): JValue = value match {
+  def doc2obj(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JObject(fields) =>
+      if(fields.isEmpty) return JNull
       val result = new scala.collection.mutable.HashMap[String, JValue]
       fields.get("file_id") match {
         case Some(JString(fileId)) => result += "url" -> JString(uri.resolve("/api/file_data/" + fileId).toString)
