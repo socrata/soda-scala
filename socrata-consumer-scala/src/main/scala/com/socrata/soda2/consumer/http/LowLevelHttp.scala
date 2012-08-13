@@ -25,27 +25,25 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
     get(uriForResource(resource), resource, Some(getParameters), noCallback, iteratee)
 
   def get[T](uri: URI, originalResource: Resource, queryParameters: Option[Map[String, Seq[String]]], progressCallback: JObject => Unit, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] = {
-    val builder = client.prepareGet(uri.toURL.toString).
+    log.debug("Making GET request to {}", uri)
+    queryParameters.foreach{ p => log.debug("With query parameters {}", com.rojoma.json.util.JsonUtil.renderJson(p)) }
+    client.prepareGet(uri.toURL.toString).
       maybeSetQueryParametersS(queryParameters).
       setFollowRedirects(true).
       setHeader("Accept", "application/json").
-      authorize(authorization)
-    log.debug("Making request to {}", uri)
-    queryParameters.foreach{ p => log.debug("With query parameters {}", com.rojoma.json.util.JsonUtil.renderJson(p)) }
-    builder.
+      authorize(authorization).
       makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _)))).
       flatMap(maybeRetryGet(uri, originalResource, queryParameters, progressCallback, iteratee, _))
   }
 
   def postForm[T](uri: URI, originalResource: Resource, formParameters: Option[Map[String, Seq[String]]], progressCallback: JObject => Unit, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] = {
-    val builder = client.preparePost(uri.toString).
+    log.debug("Making POST request to {}", uri)
+    formParameters.foreach{ p => log.debug("With form parameters {}", com.rojoma.json.util.JsonUtil.renderJson(p)) }
+    client.preparePost(uri.toString).
       maybeSetParametersS(formParameters).
       setFollowRedirects(true).
       setHeader("Accept", "application/json").
-      authorize(authorization)
-    log.debug("Making request to {}", uri)
-    formParameters.foreach{ p => log.debug("With form parameters {}", com.rojoma.json.util.JsonUtil.renderJson(p)) }
-    builder.
+      authorize(authorization).
       makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _)))).
       flatMap(maybeRetryForm(uri, originalResource, formParameters, progressCallback, iteratee, _))
   }
@@ -53,18 +51,27 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
   def postJson[T](resource: Resource, body: JValue, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
     postJson(uriForResource(resource), resource, None, body, noCallback, iteratee)
 
-  def postJson[T](uri: URI, originalResource: Resource, queryParameters: Option[Map[String, Seq[String]]], body: JValue, progressCallback: JObject => Unit, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] = {
-    val builder = client.preparePost(uri.toString).
+  def postJson[T](uri: URI, originalResource: Resource, queryParameters: Option[Map[String, Seq[String]]], body: JValue, progressCallback: JObject => Unit, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
+    postPutJson(client.preparePost(uri.toString), true, uri, originalResource, queryParameters, body, progressCallback, iteratee)
+
+  def putJson[T](resource: Resource, body: JValue, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
+    putJson(uriForResource(resource), resource, None, body, noCallback, iteratee)
+
+  def putJson[T](uri: URI, originalResource: Resource, queryParameters: Option[Map[String, Seq[String]]], body: JValue, progressCallback: JObject => Unit, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
+    postPutJson(client.preparePut(uri.toString), false, uri, originalResource, queryParameters, body, progressCallback, iteratee)
+
+  def postPutJson[T](builder: AsyncHttpClient#BoundRequestBuilder, isPost: Boolean, uri: URI, originalResource: Resource, queryParameters: Option[Map[String, Seq[String]]], body: JValue, progressCallback: JObject => Unit, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] = {
+    log.debug("Making JSON {} request to {}", (if(isPost) "POST" else "PUT"), uri)
+    queryParameters.foreach{ p => log.debug("With query parameters {}", com.rojoma.json.util.JsonUtil.renderJson(p)) }
+    builder.
       maybeSetQueryParametersS(queryParameters).
       setFollowRedirects(true).
       setHeader("Accept", "application/json").
       setHeader("Content-type", "application/json; charset=utf-8").
       authorize(authorization).
-      setBody(new JsonEntityWriter(body))
-    log.debug("Making request to {}", uri)
-    builder.
+      setBody(new JsonEntityWriter(body)).
       makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _)))).
-      flatMap(maybeRetryJson(uri, originalResource, queryParameters, body, progressCallback, iteratee, _))
+      flatMap(maybeRetryJson(isPost, uri, originalResource, queryParameters, body, progressCallback, iteratee, _))
   }
 
   def bodyConsumer[T](headers: Headers, codec: Codec, iteratee: Soda2Metadata => CharIteratee[T]) = {
@@ -129,9 +136,10 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
       get(target, originalResource, None, progressCallback, iteratee)
   }
 
-  def maybeRetryJson[T](uri: URI, originalResource: Resource, queryParameters: Option[Map[String, Seq[String]]], body: JValue, progressCallback: JObject => Unit, iteratee: (URI, Soda2Metadata) => CharIteratee[T], x: Retryable[T]): Future[T] = maybeRetry(x, progressCallback) {
+  def maybeRetryJson[T](isPost: Boolean, uri: URI, originalResource: Resource, queryParameters: Option[Map[String, Seq[String]]], body: JValue, progressCallback: JObject => Unit, iteratee: (URI, Soda2Metadata) => CharIteratee[T], x: Retryable[T]): Future[T] = maybeRetry(x, progressCallback) {
     case Retry(_, _) =>
-      postJson(uri, originalResource, queryParameters, body, progressCallback, iteratee)
+      if(isPost) postJson(uri, originalResource, queryParameters, body, progressCallback, iteratee)
+      else putJson(uri, originalResource, queryParameters, body, progressCallback, iteratee)
     case RetryWithTicket(ticket, _, _) =>
       val newParameters = Some(queryParameters.getOrElse(Map.empty[String, Seq[String]]) + ("ticket" -> Seq(ticket)))
       get(uri, originalResource, newParameters, progressCallback, iteratee)

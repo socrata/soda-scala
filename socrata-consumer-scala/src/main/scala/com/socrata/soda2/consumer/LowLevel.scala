@@ -39,6 +39,14 @@ trait LowLevel {
    * @param iteratee A handler for the response. */
   def postJson[T](resource: Resource, jvalue: JValue, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T]
 
+  /** Executes a PUT query against a SODA2 server and feeds the character data returned into the given
+   * [[com.socrata.iteratee.Iteratee]].
+   *
+   * @param resource The resource to which to send the JSON.
+   * @param jvalue The JSON to serialize into the request.
+   * @param iteratee A handler for the response. */
+  def putJson[T](resource: Resource, jvalue: JValue, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T]
+
   // All the remaining methods are actually SODA1 methods that we must support but
   // which do not map neatly into a simple operation-on-a-Resource.  Instead they
   // use the given Resources to construct URLs corresponding to legacy SODA1 endpoints
