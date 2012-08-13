@@ -21,6 +21,7 @@ class RowDecoder(datasetBase: URI, schema: Map[ColumnName, SodaType]) extends (J
         case Some(typ) =>
           rawRow.get(colName.toString) match {
             case Some(value) =>
+              // TODO: use "datasetBase" to resolve links
               typ.convertFrom(value)
             case None =>
               None
@@ -73,7 +74,8 @@ object RowDecoder {
     "geospatial" -> SodaGeospatial,
     "location" -> SodaLocation,
     "boolean" -> SodaBoolean,
-    "timestamp" -> SodaTimestamp,
+    "timestamp_floating" -> SodaTimestampFloating,
+    "timestamp_fixed" -> SodaTimestampFixed,
     "array" -> SodaArray,
     "object" -> SodaObject
   )

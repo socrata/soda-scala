@@ -39,8 +39,8 @@ private[consumer] object LegacyRowDecoder {
     "double" -> k(SodaDouble),
     "money" -> k(SodaMoney),
     "percent" -> k(SodaNumber),
-    "date" -> k(SodaTimestamp),
-    "calendar_date" -> k(SodaTimestamp), // FIXME
+    "date" -> k(SodaTimestampFixed),
+    "calendar_date" -> k(SodaTimestampFloating),
     "location" -> k(SodaLocation),
     "url" -> k(SodaObject),
     "email" -> k(SodaString),
@@ -58,12 +58,12 @@ private[consumer] object LegacyRowDecoder {
 
   def selectMetadataType(columnName: String): SodaType = columnName match {
     case ":id" => SodaNumber
-    case ":created_at" => SodaTimestamp
+    case ":created_at" => SodaTimestampFixed
     case ":position" => SodaNumber
     case ":meta" => SodaString
     case ":created_meta" => SodaString
-    case ":updated_at" => SodaTimestamp
-    case ":updated_meta" => SodaTimestamp
+    case ":updated_at" => SodaTimestampFixed
+    case ":updated_meta" => SodaTimestampFixed
   }
 
   val id = (_: String, _: URI, v: JValue) => v
@@ -76,7 +76,7 @@ private[consumer] object LegacyRowDecoder {
     "double" -> id,
     "money" -> id,
     "percent" -> id,
-    "date" -> epoch2iso _, // FIXME: this needs to return a "fixed" timestamp
+    "date" -> epoch2iso,
     "calendar_date" -> id,
     "location" -> loc2loc,
     "url" -> url2obj,
@@ -86,10 +86,10 @@ private[consumer] object LegacyRowDecoder {
     "stars" -> stars2num,
     "phone"-> phone2obj,
     "drop_down_list" -> id,
-    "photo" -> photo2link _,
+    "photo" -> photo2link,
     "document" -> doc2obj,
     "nested_table" -> id,
-    "meta_data" -> metadata2thing _
+    "meta_data" -> metadata2thing
   // TODO: dataset link, which is a wildly ill-thought-out misfeature
   )
 
@@ -126,6 +126,8 @@ private[consumer] object LegacyRowDecoder {
       }
       if(lat == JNull && lon == JNull && ha == JNull) JNull
       else JArray(Seq(lat, lon, ha))
+    case JArray(elems) =>
+      JArray(elems)
     case _ =>
       error("NYI")
   }
@@ -150,26 +152,24 @@ private[consumer] object LegacyRowDecoder {
       error("NYI")
   }
 
-  val epochFormatter = new DateTimeFormatterBuilder().append(ISODateTimeFormat.date()).appendLiteral('T').append(ISODateTimeFormat.hourMinuteSecond()).toFormatter
-  def formatEpoch(instant: Long) = {
-    JString(epochFormatter.print(instant))
-  }
-
   def epoch2iso(fieldName: String, uri: URI, value: JValue): JValue = value match {
-    case JString(num) =>
+    case JString(s) =>
       try {
-        formatEpoch(num.toLong * 1000L)
+        JString(ISODateTimeFormat.dateTimeNoMillis.print(s.toLong * 1000L))
       } catch {
-        case _: NumberFormatException => error("NYI")
+        case _: NumberFormatException =>
+          JString(s) // it's probably already formatted properly so fall through to standard SODA2 parsing
       }
     case n: JNumber =>
-      formatEpoch(n.toLong * 1000L)
+      JString(ISODateTimeFormat.dateTimeNoMillis.print(n.toLong * 1000L))
     case JNull => JNull
     case _ => error("NYI")
   }
 
   def photo2link(fieldName: String, uri: URI, value: JValue): JValue = value match {
-    case JString(fileId) => JString(uri.resolve("/api/file_data/" + fileId).toString)
+    case JString(fileIdOrUri) =>
+      if(fileIdOrUri.startsWith("/api/")) JString(uri.resolve(fileIdOrUri).toString)
+      else JString(uri.resolve("/api/file_data/" + fileIdOrUri).toString)
     case _ => error("nyi")
   }
 
