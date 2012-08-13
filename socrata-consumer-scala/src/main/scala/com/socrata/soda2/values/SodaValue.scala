@@ -4,7 +4,7 @@ import java.net.URI
 
 import com.rojoma.json.ast._
 import com.rojoma.json.matcher._
-import org.joda.time.LocalDateTime
+import org.joda.time.{DateTime, LocalDateTime}
 
 import com.rojoma.json.codec.JsonCodec
 import com.rojoma.json.matcher.PObject
@@ -12,7 +12,7 @@ import scala.Some
 import com.rojoma.json.ast.JArray
 import com.rojoma.json.ast.JString
 import com.rojoma.json.matcher.POption
-import org.joda.time.format.{ISODateTimeFormat, DateTimeFormatter}
+import org.joda.time.format.ISODateTimeFormat
 
 sealed abstract class SodaValue {
   def sodaType: SodaType
@@ -108,8 +108,8 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
   private val city = Variable[String]
   private val state = Variable[String]
   private val zip = Variable[String]
-  private val latitude = Variable[String]
-  private val longitude = Variable[String]
+  private val latitude = Variable[Double]
+  private val longitude = Variable[Double]
   private val Pattern = PArray(
     FirstOf(latitude, JNull),
     FirstOf(longitude, JNull),
@@ -122,14 +122,14 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
   implicit val jsonCodec = new JsonCodec[SodaLocation] {
     def encode(x: SodaLocation) =
       Pattern.generate(address :=? x.address, city :=? x.city, state :=? x.state, zip :=? x.zip,
-        latitude :=? x.coordinates.map(_._1.toString),
-        longitude :=? x.coordinates.map(_._2.toString))
+        latitude :=? x.coordinates.map(_._1),
+        longitude :=? x.coordinates.map(_._2))
 
     def decode(v: JValue) = Pattern.matches(v).map { results =>
       val coords = for {
         lat <- latitude.get(results)
         lon <- latitude.get(results)
-      } yield (lat.toDouble, lon.toDouble) // TODO: Error handling
+      } yield (lat, lon)
       SodaLocation(address.get(results), city.get(results), state.get(results), zip.get(results), coords)
     }
   }
@@ -146,26 +146,48 @@ case object SodaBoolean extends SodaType with (Boolean => SodaBoolean) {
   def convertFrom(value: JValue) = JsonCodec[Boolean].decode(value).map(SodaBoolean)
 }
 
-case class SodaTimestamp(value: LocalDateTime) extends SodaValue {
-  def sodaType = SodaTimestamp
-  def asJson = JString(SodaTimestamp.formatSodaTimestamp(value))
+case class SodaTimestampFixed(value: DateTime) extends SodaValue {
+  def sodaType = SodaTimestampFixed
+  def asJson = JString(SodaTimestampFixed.formatSodaTimestampFixed(value))
 }
 
-case object SodaTimestamp extends SodaType with (LocalDateTime => SodaTimestamp) {
+case object SodaTimestampFixed extends SodaType with (DateTime => SodaTimestampFixed) {
   def convertFrom(value: JValue) = for {
     str <- JsonCodec[String].decode(value)
-    localdatetime <- parseSodaTimestamp(str)
-  } yield new SodaTimestamp(localdatetime)
+    datetime <- parseSodaTimestampFixed(str)
+  } yield new SodaTimestampFixed(datetime)
 
-  private val Format = """(\d\d\d\d)-(\d\d)-(\d\d)T(\d\d):(\d\d):(\d\d)""".r
-  private def parseSodaTimestamp(s: String) = s match {
-    case Format(year,mon,day,hour,min,sec) =>
-      Some(new LocalDateTime(year.toInt, mon.toInt, day.toInt, hour.toInt, min.toInt, sec.toInt))
-    case _ =>
-      None
-  }
+  private val formatter = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
+  private def formatSodaTimestampFixed(datetime: DateTime) = formatter.print(datetime)
 
-  private def formatSodaTimestamp(ts: LocalDateTime) =
+  private def parseSodaTimestampFixed(s: String) =
+    try {
+      Some(ISODateTimeFormat.dateTimeNoMillis().parseDateTime(s))
+    } catch {
+      case _: IllegalArgumentException =>
+        None
+    }
+}
+
+case class SodaTimestampFloating(value: LocalDateTime) extends SodaValue {
+  def sodaType = SodaTimestampFloating
+  def asJson = JString(SodaTimestampFloating.formatSodaTimestampFloating(value))
+}
+
+case object SodaTimestampFloating extends SodaType with (LocalDateTime => SodaTimestampFloating) {
+  def convertFrom(value: JValue) = for {
+    str <- JsonCodec[String].decode(value)
+    localdatetime <- parseSodaTimestampFloating(str)
+  } yield new SodaTimestampFloating(localdatetime)
+
+  private def parseSodaTimestampFloating(s: String) =
+    try {
+      Some(ISODateTimeFormat.dateTimeNoMillis().parseLocalDateTime(s))
+    } catch {
+      case _: IllegalArgumentException => None
+    }
+
+  private def formatSodaTimestampFloating(ts: LocalDateTime) =
     ISODateTimeFormat.dateTimeNoMillis.print(ts)
 }
 
