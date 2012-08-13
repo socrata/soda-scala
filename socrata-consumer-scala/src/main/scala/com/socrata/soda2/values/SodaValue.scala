@@ -110,14 +110,14 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
   private val zip = Variable[String]
   private val latitude = Variable[String]
   private val longitude = Variable[String]
-  private val Pattern = PObject(
-    "human_address" -> POption(PObject(
+  private val Pattern = PArray(
+    FirstOf(latitude, JNull),
+    FirstOf(longitude, JNull),
+    FirstOf(PObject(
       "address" -> POption(address).orNull,
       "city" -> POption(city).orNull,
       "state" -> POption(state).orNull,
-      "zip" -> POption(zip).orNull)),
-    "latitude" -> POption(latitude).orNull,
-    "longitude" -> POption(longitude).orNull)
+      "zip" -> POption(zip).orNull), JNull))
 
   implicit val jsonCodec = new JsonCodec[SodaLocation] {
     def encode(x: SodaLocation) =

@@ -8,7 +8,7 @@ import com.rojoma.json.ast._
 import com.socrata.soda2.{UnknownTypeException, ColumnName}
 import com.socrata.soda2.values._
 import org.joda.time.format.{DateTimeFormatterBuilder, ISODateTimeFormat}
-import com.rojoma.json.io.JsonReader
+import com.rojoma.json.io.{JsonReaderException, JsonReader}
 
 private[consumer] class LegacyRowDecoder(datasetBase: URI, rawSchema: Map[ColumnName, String]) extends (JObject => Row) {
   import LegacyRowDecoder._
@@ -117,11 +117,15 @@ private[consumer] object LegacyRowDecoder {
   def loc2loc(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JObject(fields) =>
       if(fields.isEmpty) return JNull
-      JObject(fields.get("human_address") match {
-        case Some(JString(ha)) => fields + ("human_address" -> JsonReader.fromString(ha))
-        case None => fields
-        case _ => error("NYI")
-      })
+      val lat = fields.getOrElse("latitude", JNull)
+      val lon = fields.getOrElse("longitude", JNull)
+      val ha = try {
+        fields.get("human_address").collect { case JString(s) => JsonReader.fromString(s) }.getOrElse(JNull)
+      } catch {
+        case e: JsonReaderException =>
+          throw new MalformedJsonWhileReadingRowsException(e)
+      }
+      JArray(Seq(lat, lon, ha))
     case _ =>
       error("NYI")
   }
