@@ -111,6 +111,7 @@ private[consumer] object LegacyRowDecoder {
 
   def stars2num(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JNumber(n) => JString(n.toString)
+    case JString(s) => JString(s) // already converted
     case _ => error("NYI")
   }
 
@@ -155,13 +156,13 @@ private[consumer] object LegacyRowDecoder {
   def epoch2iso(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JString(s) =>
       try {
-        JString(ISODateTimeFormat.dateTimeNoMillis.print(s.toLong * 1000L))
+        JString(ISODateTimeFormat.dateTime.print(s.toLong * 1000L))
       } catch {
         case _: NumberFormatException =>
           JString(s) // it's probably already formatted properly so fall through to standard SODA2 parsing
       }
     case n: JNumber =>
-      JString(ISODateTimeFormat.dateTimeNoMillis.print(n.toLong * 1000L))
+      JString(ISODateTimeFormat.dateTime.print(n.toLong * 1000L))
     case JNull => JNull
     case _ => error("NYI")
   }
@@ -176,28 +177,32 @@ private[consumer] object LegacyRowDecoder {
   def doc2obj(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JObject(fields) =>
       val result = new scala.collection.mutable.HashMap[String, JValue]
-      fields.get("file_id") match {
-        case Some(JString(fileId)) => result += "Url" -> JString(uri.resolve("/api/file_data/" + fileId).toString)
-        case None => // nothing
-        case _ => error("nyi")
+      if(fields.contains("FileName") || fields.contains("Url") || fields.contains("MimeType") || fields.contains("Size"))
+        JObject(fields)
+      else {
+        fields.get("file_id") match {
+          case Some(JString(fileId)) => result += "Url" -> JString(uri.resolve("/api/file_data/" + fileId).toString)
+          case None => // nothing
+          case _ => error("nyi")
+        }
+        fields.get("content_type") match {
+          case Some(JString(contentType)) => result += "MimeType" -> JString(contentType)
+          case None => // nothing
+          case _ => error("nyi")
+        }
+        fields.get("filename") match {
+          case Some(JString(filename)) => result += "FileName" -> JString(filename)
+          case None => // nothing
+          case _ => error("nyi")
+        }
+        fields.get("size") match {
+          case Some(JNumber(size)) => result += "Size" -> JNumber(size)
+          case None => // nothing
+          case _ => error("nyi")
+        }
+        if(result.isEmpty) JNull
+        else JObject(result)
       }
-      fields.get("content_type") match {
-        case Some(JString(contentType)) => result += "MimeType" -> JString(contentType)
-        case None => // nothing
-        case _ => error("nyi")
-      }
-      fields.get("filename") match {
-        case Some(JString(filename)) => result += "FileName" -> JString(filename)
-        case None => // nothing
-        case _ => error("nyi")
-      }
-      fields.get("size") match {
-        case Some(JNumber(size)) => result += "Size" -> JNumber(size)
-        case None => // nothing
-        case _ => error("nyi")
-      }
-      if(result.isEmpty) JNull
-      else JObject(result)
     case _ => error("nyi")
   }
 }

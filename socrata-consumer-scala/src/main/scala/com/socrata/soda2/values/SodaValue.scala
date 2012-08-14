@@ -66,9 +66,11 @@ case class SodaNumber(value: BigDecimal) extends SodaValue {
 
 case object SodaNumber extends SodaType with (BigDecimal => SodaNumber) {
   def convertFrom(value: JValue) = JsonCodec[String].decode(value).map { numStr =>
-    val num = new java.math.BigDecimal(numStr) // TODO: Catch exceptions
-    SodaNumber(num)
-  }
+    new java.math.BigDecimal(numStr) : BigDecimal // TODO: Catch exceptions
+  }.orElse {
+    JsonCodec[BigDecimal].decode(value)
+  }.map(SodaNumber)
+
   override def toString = "SodaNumber"
 }
 
@@ -167,12 +169,12 @@ case object SodaTimestampFixed extends SodaType with (DateTime => SodaTimestampF
     datetime <- parseSodaTimestampFixed(str)
   } yield new SodaTimestampFixed(datetime)
 
-  private val formatter = ISODateTimeFormat.dateTimeNoMillis().withZoneUTC()
+  private val formatter = ISODateTimeFormat.dateTime.withZoneUTC()
   private def formatSodaTimestampFixed(datetime: DateTime) = formatter.print(datetime)
 
   private def parseSodaTimestampFixed(s: String) =
     try {
-      Some(ISODateTimeFormat.dateTimeNoMillis().parseDateTime(s))
+      Some(ISODateTimeFormat.dateTime.parseDateTime(s))
     } catch {
       case _: IllegalArgumentException =>
         None
@@ -194,13 +196,13 @@ case object SodaTimestampFloating extends SodaType with (LocalDateTime => SodaTi
 
   private def parseSodaTimestampFloating(s: String) =
     try {
-      Some(ISODateTimeFormat.dateTimeNoMillis().parseLocalDateTime(s))
+      Some(ISODateTimeFormat.dateTime.parseLocalDateTime(s + "Z"))
     } catch {
-      case _: IllegalArgumentException => None
+      case e: IllegalArgumentException => None
     }
 
   private def formatSodaTimestampFloating(ts: LocalDateTime) =
-    ISODateTimeFormat.dateTimeNoMillis.print(ts)
+    ISODateTimeFormat.dateTime.print(ts)
 
   override def toString = "SodaTimestampFloating"
 }

@@ -38,6 +38,7 @@ class RowDecoder(datasetBase: URI, schema: Map[ColumnName, SodaType]) extends (J
         case Some(typ) =>
           rawRow.get(colName.toString) match {
             case Some(value) =>
+              // TODO: use "datasetBase" to resolve links
               typ.convertFrom(value).getOrElse(orElse)
             case None =>
               orElse
