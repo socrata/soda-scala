@@ -79,12 +79,12 @@ private[consumer] object LegacyRowDecoder {
     "date" -> epoch2iso,
     "calendar_date" -> id,
     "location" -> loc2loc,
-    "url" -> url2obj,
+    "url" -> id,
     "email" -> id,
     "checkbox" -> id,
     "flag" -> id,
     "stars" -> stars2num,
-    "phone"-> phone2obj,
+    "phone"-> id,
     "drop_down_list" -> id,
     "photo" -> photo2link,
     "document" -> doc2obj,
@@ -97,16 +97,19 @@ private[consumer] object LegacyRowDecoder {
     case ":id" => value match {
       case JNumber(x) => JString(x.toString)
       case JNull => JNull
+      case _ => error("nyi")
     }
     case ":created_at" => epoch2iso(fieldName, uri, value)
     case ":position" => value match {
       case JNumber(x) => JString(x.toString)
       case JNull => JNull
+      case _ => error("nyi")
     }
     case ":meta" => value
     case ":created_meta" => value
     case ":updated_at" => epoch2iso(fieldName, uri, value)
     case ":updated_meta" => value
+    case _ => error("nyi")
   }
 
   def stars2num(fieldName: String, uri: URI, value: JValue): JValue = value match {
@@ -129,26 +132,6 @@ private[consumer] object LegacyRowDecoder {
       else JArray(Seq(lat, lon, ha))
     case JArray(elems) =>
       JArray(elems)
-    case _ =>
-      error("NYI")
-  }
-
-  def url2obj(fieldName: String, uri: URI, value: JValue): JValue = value match {
-    case JObject(fields) =>
-      val desc = fields.getOrElse("description", JNull)
-      val url = fields.getOrElse("url", JNull)
-      if(desc == JNull && url == JNull) JNull
-      else JObject(Map("Url" -> url, "Description" -> desc))
-    case _ =>
-      error("NYI")
-  }
-
-  def phone2obj(fieldName: String, uri: URI, value: JValue): JValue = value match {
-    case JObject(fields) =>
-      val num = fields.getOrElse("phone_number", JNull)
-      val typ = fields.getOrElse("phone_type", JNull)
-      if(num == JNull && typ == JNull) JNull
-      else JObject(Map("PhoneNumber" -> num, "Type" -> typ))
     case _ =>
       error("NYI")
   }
@@ -181,25 +164,13 @@ private[consumer] object LegacyRowDecoder {
         JObject(fields)
       else {
         fields.get("file_id") match {
-          case Some(JString(fileId)) => result += "Url" -> JString(uri.resolve("/api/file_data/" + fileId).toString)
+          case Some(JString(fileId)) => result += "url" -> JString(uri.resolve("/api/file_data/" + fileId).toString)
           case None => // nothing
           case _ => error("nyi")
         }
-        fields.get("content_type") match {
-          case Some(JString(contentType)) => result += "MimeType" -> JString(contentType)
-          case None => // nothing
-          case _ => error("nyi")
-        }
-        fields.get("filename") match {
-          case Some(JString(filename)) => result += "FileName" -> JString(filename)
-          case None => // nothing
-          case _ => error("nyi")
-        }
-        fields.get("size") match {
-          case Some(JNumber(size)) => result += "Size" -> JNumber(size)
-          case None => // nothing
-          case _ => error("nyi")
-        }
+        for(ct <- fields.get("content_type")) result += "content_type" -> ct
+        for(fn <- fields.get("filename")) result += "filename" -> fn
+        for(sz <- fields.get("size")) result += "size" -> sz
         if(result.isEmpty) JNull
         else JObject(result)
       }
