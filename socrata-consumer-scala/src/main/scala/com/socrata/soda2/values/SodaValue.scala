@@ -158,23 +158,29 @@ case object SodaBoolean extends SodaType with (Boolean => SodaBoolean) {
   override def toString = "SodaBoolean"
 }
 
+private[values] object TimestampCommon {
+  val formatter = ISODateTimeFormat.dateTime.withZoneUTC
+  def parser = ISODateTimeFormat.dateTimeParser
+}
+
 case class SodaFixedTimestamp(value: DateTime) extends SodaValue {
   def sodaType = SodaFixedTimestamp
   def asJson = JString(SodaFixedTimestamp.formatSodaFixedTimestamp(value))
 }
 
 case object SodaFixedTimestamp extends SodaType with (DateTime => SodaFixedTimestamp) {
+  import TimestampCommon._
+
   def convertFrom(value: JValue) = for {
     str <- JsonCodec[String].decode(value)
     datetime <- parseSodaFixedTimestamp(str)
   } yield new SodaFixedTimestamp(datetime)
 
-  private val formatter = ISODateTimeFormat.dateTime.withZoneUTC()
   private def formatSodaFixedTimestamp(datetime: DateTime) = formatter.print(datetime)
 
   private def parseSodaFixedTimestamp(s: String) =
     try {
-      Some(ISODateTimeFormat.dateTime.parseDateTime(s))
+      Some(parser.parseDateTime(s))
     } catch {
       case _: IllegalArgumentException =>
         None
@@ -189,6 +195,8 @@ case class SodaFloatingTimestamp(value: LocalDateTime) extends SodaValue {
 }
 
 case object SodaFloatingTimestamp extends SodaType with (LocalDateTime => SodaFloatingTimestamp) {
+  import TimestampCommon._
+
   def convertFrom(value: JValue) = for {
     str <- JsonCodec[String].decode(value)
     localdatetime <- parseSodaFloatingTimestamp(str)
@@ -196,13 +204,12 @@ case object SodaFloatingTimestamp extends SodaType with (LocalDateTime => SodaFl
 
   private def parseSodaFloatingTimestamp(s: String) =
     try {
-      Some(ISODateTimeFormat.dateTime.parseLocalDateTime(s + "Z"))
+      Some(parser.parseLocalDateTime(s))
     } catch {
       case e: IllegalArgumentException => None
     }
 
-  private def formatSodaFloatingTimestamp(ts: LocalDateTime) =
-    ISODateTimeFormat.dateTime.print(ts)
+  private def formatSodaFloatingTimestamp(ts: LocalDateTime) = formatter.print(ts)
 
   override def toString = "SodaFloatingTimestamp"
 }
