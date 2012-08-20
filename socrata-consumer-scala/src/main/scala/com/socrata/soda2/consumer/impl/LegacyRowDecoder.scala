@@ -9,6 +9,7 @@ import com.socrata.soda2.{UnknownTypeException, ColumnName}
 import com.socrata.soda2.values._
 import org.joda.time.format.{DateTimeFormatterBuilder, ISODateTimeFormat}
 import com.rojoma.json.io.{JsonReaderException, JsonReader}
+import org.joda.time.{DateTimeZone, DateTime}
 
 private[consumer] class LegacyRowDecoder(datasetBase: URI, rawSchema: Map[ColumnName, String]) extends (JObject => Row) {
   import LegacyRowDecoder._
@@ -39,8 +40,8 @@ private[consumer] object LegacyRowDecoder {
     "double" -> k(SodaDouble),
     "money" -> k(SodaMoney),
     "percent" -> k(SodaNumber),
-    "date" -> k(SodaTimestampFixed),
-    "calendar_date" -> k(SodaTimestampFloating),
+    "date" -> k(SodaFixedTimestamp),
+    "calendar_date" -> k(SodaFloatingTimestamp),
     "location" -> k(SodaLocation),
     "url" -> k(SodaObject),
     "email" -> k(SodaString),
@@ -58,12 +59,12 @@ private[consumer] object LegacyRowDecoder {
 
   def selectMetadataType(columnName: String): SodaType = columnName match {
     case ":id" => SodaNumber
-    case ":created_at" => SodaTimestampFixed
+    case ":created_at" => SodaFixedTimestamp
     case ":position" => SodaNumber
     case ":meta" => SodaString
     case ":created_meta" => SodaString
-    case ":updated_at" => SodaTimestampFixed
-    case ":updated_meta" => SodaTimestampFixed
+    case ":updated_at" => SodaFixedTimestamp
+    case ":updated_meta" => SodaFixedTimestamp
   }
 
   val id = (_: String, _: URI, v: JValue) => v
@@ -139,13 +140,13 @@ private[consumer] object LegacyRowDecoder {
   def epoch2iso(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JString(s) =>
       try {
-        JString(ISODateTimeFormat.dateTime.print(s.toLong * 1000L))
+        JString(ISODateTimeFormat.dateTime.print(new DateTime(s.toLong * 1000L, DateTimeZone.UTC)))
       } catch {
         case _: NumberFormatException =>
           JString(s) // it's probably already formatted properly so fall through to standard SODA2 parsing
       }
     case n: JNumber =>
-      JString(ISODateTimeFormat.dateTime.print(n.toLong * 1000L))
+      JString(ISODateTimeFormat.dateTime.print(new DateTime(n.toLong * 1000L, DateTimeZone.UTC)))
     case JNull => JNull
     case _ => error("NYI")
   }

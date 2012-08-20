@@ -158,21 +158,21 @@ case object SodaBoolean extends SodaType with (Boolean => SodaBoolean) {
   override def toString = "SodaBoolean"
 }
 
-case class SodaTimestampFixed(value: DateTime) extends SodaValue {
-  def sodaType = SodaTimestampFixed
-  def asJson = JString(SodaTimestampFixed.formatSodaTimestampFixed(value))
+case class SodaFixedTimestamp(value: DateTime) extends SodaValue {
+  def sodaType = SodaFixedTimestamp
+  def asJson = JString(SodaFixedTimestamp.formatSodaFixedTimestamp(value))
 }
 
-case object SodaTimestampFixed extends SodaType with (DateTime => SodaTimestampFixed) {
+case object SodaFixedTimestamp extends SodaType with (DateTime => SodaFixedTimestamp) {
   def convertFrom(value: JValue) = for {
     str <- JsonCodec[String].decode(value)
-    datetime <- parseSodaTimestampFixed(str)
-  } yield new SodaTimestampFixed(datetime)
+    datetime <- parseSodaFixedTimestamp(str)
+  } yield new SodaFixedTimestamp(datetime)
 
   private val formatter = ISODateTimeFormat.dateTime.withZoneUTC()
-  private def formatSodaTimestampFixed(datetime: DateTime) = formatter.print(datetime)
+  private def formatSodaFixedTimestamp(datetime: DateTime) = formatter.print(datetime)
 
-  private def parseSodaTimestampFixed(s: String) =
+  private def parseSodaFixedTimestamp(s: String) =
     try {
       Some(ISODateTimeFormat.dateTime.parseDateTime(s))
     } catch {
@@ -180,31 +180,31 @@ case object SodaTimestampFixed extends SodaType with (DateTime => SodaTimestampF
         None
     }
 
-  override def toString = "SodaTimestampFixed"
+  override def toString = "SodaFixedTimestamp"
 }
 
-case class SodaTimestampFloating(value: LocalDateTime) extends SodaValue {
-  def sodaType = SodaTimestampFloating
-  def asJson = JString(SodaTimestampFloating.formatSodaTimestampFloating(value))
+case class SodaFloatingTimestamp(value: LocalDateTime) extends SodaValue {
+  def sodaType = SodaFloatingTimestamp
+  def asJson = JString(SodaFloatingTimestamp.formatSodaFloatingTimestamp(value))
 }
 
-case object SodaTimestampFloating extends SodaType with (LocalDateTime => SodaTimestampFloating) {
+case object SodaFloatingTimestamp extends SodaType with (LocalDateTime => SodaFloatingTimestamp) {
   def convertFrom(value: JValue) = for {
     str <- JsonCodec[String].decode(value)
-    localdatetime <- parseSodaTimestampFloating(str)
-  } yield new SodaTimestampFloating(localdatetime)
+    localdatetime <- parseSodaFloatingTimestamp(str)
+  } yield new SodaFloatingTimestamp(localdatetime)
 
-  private def parseSodaTimestampFloating(s: String) =
+  private def parseSodaFloatingTimestamp(s: String) =
     try {
       Some(ISODateTimeFormat.dateTime.parseLocalDateTime(s + "Z"))
     } catch {
       case e: IllegalArgumentException => None
     }
 
-  private def formatSodaTimestampFloating(ts: LocalDateTime) =
+  private def formatSodaFloatingTimestamp(ts: LocalDateTime) =
     ISODateTimeFormat.dateTime.print(ts)
 
-  override def toString = "SodaTimestampFloating"
+  override def toString = "SodaFloatingTimestamp"
 }
 
 case class SodaArray(value: JArray) extends SodaValue {
