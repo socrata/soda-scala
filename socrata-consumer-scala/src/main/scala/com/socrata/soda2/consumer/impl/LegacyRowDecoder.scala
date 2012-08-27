@@ -119,20 +119,42 @@ private[consumer] object LegacyRowDecoder {
     case _ => error("NYI")
   }
 
+  def numberify(value: JValue) = value match {
+    case JNumber(n) =>
+      JNumber(n)
+    case JString(n) =>
+      try {
+        JNumber(BigDecimal(n))
+      } catch {
+        case _: NumberFormatException =>
+          error("NYI")
+      }
+    case _ =>
+      error("NYI")
+  }
+
   def loc2loc(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JObject(fields) =>
-      val lat = fields.getOrElse("latitude", JNull)
-      val lon = fields.getOrElse("longitude", JNull)
-      val ha = try {
-        fields.get("human_address").collect { case JString(s) => JsonReader.fromString(s) }.getOrElse(JNull)
+      // A SODA2 location is *very nearly* a SODA1 location.
+      // The only differences are that the lat/lon values are doubles (i.e., JSON
+      // numbers) instead of numbers (i.e., JSON strings) and that the human_address
+      // field is a JSON object, not a string-containing-a-JSON-object.
+      val newFields = new scala.collection.mutable.HashMap[String, JValue]
+      fields.get("latitude").foreach { l => newFields += "latitude" -> numberify(l) }
+      fields.get("longitude").foreach { l => newFields += "longitude" -> numberify(l) }
+      try {
+        fields.get("human_address").map {
+          case JString(s) => JsonReader.fromString(s)
+          case other => other
+        }.foreach { ha =>
+          newFields += "human_address" -> ha
+        }
       } catch {
         case e: JsonReaderException =>
           throw new MalformedJsonWhileReadingRowsException(e)
       }
-      if(lat == JNull && lon == JNull && ha == JNull) JNull
-      else JArray(Seq(lat, lon, ha))
-    case JArray(elems) =>
-      JArray(elems)
+      if(newFields.isEmpty) JNull
+      else JObject(newFields)
     case _ =>
       error("NYI")
   }
