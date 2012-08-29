@@ -17,6 +17,8 @@ object SocrataConsumer {
     // ignore annotations of types which aren't on the classpath.
     jodaConvert,
     jodaTime,
-    rojomaJson
+    rojomaJson,
+
+    scalaCheck % "test"
   )
 }
