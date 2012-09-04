@@ -5,7 +5,7 @@ import com.rojoma.json.util.SimpleJsonCodecBuilder
 case class UpsertResponse(created: Int, updated: Int, byIdentifier: Int, deleted: Int, errors: Int, bySid: Int)
 
 object UpsertResponse {
-  implicit val jCodec = SimpleJsonCodecBuilder[UpsertResponse].gen(
+  implicit val jCodec = SimpleJsonCodecBuilder[UpsertResponse].build(
     "Rows Created", _.created,
     "Rows Updated", _.updated,
     "By RowIdentifier", _.byIdentifier,

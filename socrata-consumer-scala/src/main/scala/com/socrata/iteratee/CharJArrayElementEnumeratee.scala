@@ -51,7 +51,7 @@ class CharJArrayElementEnumeratee[T](arrayProducer: JArrayProducer, iteratee: It
     handleError(arrayProducer.finish()) match {
       case Right(result) => result
       case Left(x) => x match {
-        case JArrayProducer.FinalEndOfList(_, _) =>
+        case JArrayProducer.FinalEndOfList(_) =>
           iteratee.endOfInput()
       }
     }

@@ -28,7 +28,7 @@ private[http] class ErrorHeadersConsumer(resource: Resource, code: Int) extends 
 
 private[http] object ErrorHeadersConsumer {
   case class Error(code: String, message: String, data: Option[JObject])
-  implicit val errorCodec = SimpleJsonCodecBuilder[Error].gen(
+  implicit val errorCodec = SimpleJsonCodecBuilder[Error].build(
     "code", _.code,
     "message", _.message,
     "data", _.data)
@@ -43,7 +43,7 @@ private[http] object ErrorHeadersConsumer {
   }
 
   case class LegacyError(code: Option[String], message: Option[String])
-  implicit val legacyCodec = SimpleJsonCodecBuilder[LegacyError].gen("code", _.code, "message", _.message)
+  implicit val legacyCodec = SimpleJsonCodecBuilder[LegacyError].build("code", _.code, "message", _.message)
 
   def processLegacyError(resource: Resource, status: Int, errorObject: JObject): Nothing = {
     JsonCodec.fromJValue[LegacyError](errorObject) match {

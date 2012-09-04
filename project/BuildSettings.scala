@@ -22,8 +22,7 @@ object BuildSettings {
       testOptions in Test ++= Seq(
         Tests.Argument(TestFrameworks.ScalaTest, "-oD")
       ),
-      libraryDependencies <++= scalaVersion(commonLibraries(_)),
-      resolvers += "rojoma.com" at "http://rjmac.github.com/maven/releases/"
+      libraryDependencies <++= scalaVersion(commonLibraries(_))
     )
 
   def compilerFlags(sv: String) = ScalaVersion.v(sv) match {

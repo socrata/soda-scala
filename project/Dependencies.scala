@@ -5,7 +5,7 @@ object Dependencies {
     val asyncHttpClient = "1.7.5"
     val jodaConvert = "1.2"
     val jodaTime = "2.1"
-    val rojomaJson = "1.4.7"
+    val rojomaJson = "2.0.0"
     val scalaCheck_28 = "1.8"
     val scalaCheck_29 = "1.10.0"
     val scalaTest = "1.8"

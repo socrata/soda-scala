@@ -47,7 +47,7 @@ class CharJValueEnumeratee[T](valueProducer: JValueProducer, iteratee: Iteratee[
     handleError(valueProducer.finish()) match {
       case Right(x) => x
       case Left(x) => x match {
-        case JValueProducer.FinalValue(v, _, _) =>
+        case JValueProducer.FinalValue(v, _) =>
           iteratee.process(v) match {
             case Right(result) => result
             case Left(newIteratee) => newIteratee.endOfInput()
