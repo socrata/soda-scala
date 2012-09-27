@@ -51,12 +51,12 @@ trait Publisher extends Consumer {
 object Publisher {
   private val deletedKV = ":deleted" -> JBoolean(true)
 
-  def toDeleteObject(sid: Long) = JObject(Map(
+  private def toDeleteObject(sid: Long) = JObject(Map(
     deletedKV,
     ":id" -> JNumber(sid)
   ))
 
-  def toAdditionObject[C](row: Map[C, SodaValue])(implicit ev: ColumnNameLike[C]): JObject = {
+  private def toAdditionObject[C](row: Map[C, SodaValue])(implicit ev: ColumnNameLike[C]): JObject = {
     val resultingRow = row.foldLeft(Map.empty[String, JValue]) { (rowsSoFar, colVal) =>
       val (col, value) = colVal
       rowsSoFar + (ev.asColumnName(col).toString -> value.asJson)
