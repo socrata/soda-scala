@@ -17,7 +17,9 @@ object SimpleQuery {
     try {
       val service = new HttpConsumer(client, "explore.data.gov")
 
-      val future = service.query("644b-gaut", "namelast" -> "CLINTON").foldLeft(Set.empty[String]) { (firstNames, row) =>
+      // "select distinct(firstname) where lastname = 'clinton'" but
+      // soda2 does not (yet) support "distinct".
+      val future = service.query("644b-gaut", "namelast" -> "clinton").foldLeft(Set.empty[String]) { (firstNames, row) =>
         row("namefirst") match {
           case Some(SodaString(firstName)) => firstNames + firstName
           case _ => firstNames
