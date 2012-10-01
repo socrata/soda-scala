@@ -4,7 +4,7 @@ import Keys._
 import Dependencies._
 
 object SocrataConsumer {
-  lazy val settings: Seq[Setting[_]] = BuildSettings.commonProjectSettings() ++ Seq(
+  lazy val settings: Seq[Setting[_]] = BuildSettings.commonProjectSettings() ++ BuildSettings.sonatypeSettings ++ Seq(
     libraryDependencies <++= scalaVersion(libraries(_))
   )
 
