@@ -66,7 +66,7 @@ case class SodaNumber(value: BigDecimal) extends SodaValue {
 
 case object SodaNumber extends SodaType with (BigDecimal => SodaNumber) {
   def convertFrom(value: JValue) = JsonCodec[String].decode(value).map { numStr =>
-    new java.math.BigDecimal(numStr) : BigDecimal // TODO: Catch exceptions
+    new BigDecimal(new java.math.BigDecimal(numStr)) // TODO: Catch exceptions
   }.orElse {
     JsonCodec[BigDecimal].decode(value)
   }.map(SodaNumber)
@@ -92,7 +92,7 @@ case class SodaMoney(value: BigDecimal) extends SodaValue {
 case object SodaMoney extends SodaType with (BigDecimal => SodaMoney) {
   def convertFrom(value: JValue) = JsonCodec[String].decode(value).map { numStr =>
     val num = new java.math.BigDecimal(numStr) // TODO: Catch exceptions
-    SodaMoney(num)
+    SodaMoney(new BigDecimal(num))
   }
   override def toString = "SodaMoney"
 }

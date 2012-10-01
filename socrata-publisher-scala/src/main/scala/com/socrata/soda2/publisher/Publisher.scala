@@ -15,7 +15,7 @@ trait Publisher extends Consumer {
   def upsert[R, C](resource: R, additions: Seq[Map[C, SodaValue]] = Nil, deletions: TraversableOnce[Long] = Nil)(implicit ev : ResourceLike[R], ev2: ColumnNameLike[C]): Future[UpsertResponse] =
     lowLevel.postJson(
       ev.asResource(resource),
-      JArray(additions.map(toAdditionObject[C]) ++ deletions.map(toDeleteObject)),
+      JArray(additions.map(toAdditionObject[C]) ++ deletions.toSeq.map(toDeleteObject)),
       { (_, _) =>
         new CharJValueEnumeratee(
           impl.UpsertResponseIteratee,
