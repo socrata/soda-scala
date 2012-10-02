@@ -3,7 +3,7 @@ import Keys._
 
 import Dependencies._
 
-object SocrataPublisher {
+object SodaPublisher {
   lazy val settings: Seq[Setting[_]] = BuildSettings.commonProjectSettings() ++ BuildSettings.sonatypeSettings ++ Seq(
     libraryDependencies <++= scalaVersion(libraries(_))
   )

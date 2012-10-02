@@ -2,7 +2,7 @@ import sbt._
 
 object Build extends sbt.Build {
   lazy val build = Project(
-    "socrata-api",
+    "soda-scala",
     file("."),
     settings = BuildSettings.buildSettings
   ) aggregate (allOtherProjects: _*)
@@ -16,9 +16,9 @@ object Build extends sbt.Build {
   private def p(name: String, settings: { def settings: Seq[Setting[_]] }, dependencies: ClasspathDep[ProjectReference]*) =
     Project(name, file(name), settings = settings.settings) dependsOn(dependencies: _*)
 
-  lazy val socrataConsumer = p("socrata-consumer-scala", SocrataConsumer)
+  lazy val sodaConsumer = p("soda-consumer-scala", SodaConsumer)
 
-  lazy val socrataPublisher = p("socrata-publisher-scala", SocrataPublisher, socrataConsumer)
+  lazy val sodaPublisher = p("soda-publisher-scala", SodaPublisher, sodaConsumer)
 
-  lazy val socrataSample = p("socrata-scala-sample", SocrataSample, socrataPublisher)
+  lazy val sodaSample = p("soda-scala-sample", SodaSample, sodaPublisher)
 }
