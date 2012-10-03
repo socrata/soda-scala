@@ -5,7 +5,8 @@ import Dependencies._
 
 object SodaSample {
   lazy val settings: Seq[Setting[_]] = BuildSettings.commonProjectSettings(assembly = true) ++ Seq(
-    libraryDependencies <++= scalaVersion(libraries(_))
+    libraryDependencies <++= scalaVersion(libraries(_)),
+    publish := {}
   )
 
   def libraries(implicit scalaVersion: String) = Seq(
