@@ -1,11 +1,12 @@
 import sbt._
+import Keys._
 
 object Build extends sbt.Build {
   lazy val build = Project(
     "soda-scala",
     file("."),
-    settings = BuildSettings.buildSettings
-  ) aggregate (allOtherProjects: _*)
+    settings = BuildSettings.buildSettings ++ BuildSettings.sonatypeSettings
+  ) aggregate (allOtherProjects: _*) dependsOn(sodaConsumer, sodaPublisher)
 
   private def allOtherProjects =
     for {
