@@ -15,15 +15,21 @@ import com.rojoma.json.matcher.POption
 import org.joda.time.format.ISODateTimeFormat
 
 sealed abstract class SodaValue {
+  type ValueType
   def sodaType: SodaType
   def asJson: JValue
+  def value:ValueType
 }
+
+
+
 
 sealed abstract class SodaType {
   def convertFrom(value: JValue): Option[SodaValue]
 }
 
 case class SodaString(value: String) extends SodaValue {
+  type ValueType = String
   def sodaType = SodaString
   def asJson = JString(value)
 }
@@ -34,8 +40,10 @@ case object SodaString extends SodaType with (String => SodaString) {
 }
 
 case class SodaBlob(uri: URI) extends SodaValue {
+  type ValueType = URI
   def sodaType = SodaBlob
   def asJson = JString(uri.toString)
+  val value = uri
 }
 
 case object SodaBlob extends SodaType with (URI => SodaBlob) {
@@ -47,8 +55,10 @@ case object SodaBlob extends SodaType with (URI => SodaBlob) {
 }
 
 case class SodaLink(uri: URI) extends SodaValue {
+  type ValueType = URI
   def sodaType = SodaLink
   def asJson = JString(uri.toString)
+  val value = uri
 }
 
 case object SodaLink extends SodaType with (URI => SodaLink) {
@@ -60,6 +70,7 @@ case object SodaLink extends SodaType with (URI => SodaLink) {
 }
 
 case class SodaNumber(value: BigDecimal) extends SodaValue {
+  type ValueType = BigDecimal
   def sodaType = SodaNumber
   def asJson = JString(value.toString) // FIXME: is this right?  It's certainly how we receive it!
 }
@@ -75,6 +86,7 @@ case object SodaNumber extends SodaType with (BigDecimal => SodaNumber) {
 }
 
 case class SodaDouble(value: Double) extends SodaValue {
+  type ValueType = Double
   def sodaType = SodaDouble
   def asJson = JNumber(value)
 }
@@ -85,6 +97,7 @@ case object SodaDouble extends SodaType with (Double => SodaDouble) {
 }
 
 case class SodaMoney(value: BigDecimal) extends SodaValue {
+  type ValueType = BigDecimal
   def sodaType = SodaMoney
   def asJson = JString(value.toString) // FIXME: is this right?  It's certainly how we receive it!
 }
@@ -98,6 +111,7 @@ case object SodaMoney extends SodaType with (BigDecimal => SodaMoney) {
 }
 
 case class SodaGeospatial(value: JValue) extends SodaValue {
+  type ValueType = JValue
   def sodaType = SodaGeospatial
   def asJson = value
 }
@@ -108,8 +122,10 @@ case object SodaGeospatial extends SodaType with (JValue => SodaGeospatial) {
 }
 
 case class SodaLocation(address: Option[String], city: Option[String], state: Option[String], zip: Option[String], coordinates: Option[(Double, Double)]) extends SodaValue {
+  type ValueType = SodaLocation
   def sodaType = SodaLocation
   def asJson = SodaLocation.jsonCodec.encode(this)
+  def value = this
 }
 
 case object SodaLocation extends SodaType with ((Option[String], Option[String], Option[String], Option[String], Option[(Double, Double)]) => SodaLocation) {
@@ -149,6 +165,7 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
 }
 
 case class SodaBoolean(value: Boolean) extends SodaValue {
+  type ValueType = Boolean
   def sodaType = SodaBoolean
   def asJson = JBoolean(value)
 }
@@ -164,6 +181,7 @@ private[values] object TimestampCommon {
 }
 
 case class SodaFixedTimestamp(value: DateTime) extends SodaValue {
+  type ValueType = DateTime
   def sodaType = SodaFixedTimestamp
   def asJson = JString(SodaFixedTimestamp.formatSodaFixedTimestamp(value))
 }
@@ -190,6 +208,7 @@ case object SodaFixedTimestamp extends SodaType with (DateTime => SodaFixedTimes
 }
 
 case class SodaFloatingTimestamp(value: LocalDateTime) extends SodaValue {
+  type ValueType = LocalDateTime
   def sodaType = SodaFloatingTimestamp
   def asJson = JString(SodaFloatingTimestamp.formatSodaFloatingTimestamp(value))
 }
@@ -215,6 +234,7 @@ case object SodaFloatingTimestamp extends SodaType with (LocalDateTime => SodaFl
 }
 
 case class SodaArray(value: JArray) extends SodaValue {
+  type ValueType = JArray
   def sodaType = SodaArray
   def asJson = value
 }
@@ -225,6 +245,7 @@ case object SodaArray extends SodaType with (JArray => SodaArray) {
 }
 
 case class SodaObject(value: JObject) extends SodaValue {
+  type ValueType = JObject
   def sodaType = SodaObject
   def asJson = value
 }
