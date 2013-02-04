@@ -9,7 +9,7 @@ import Dependencies._
 object BuildSettings {
   val buildSettings: Seq[Setting[_]] = Defaults.defaultSettings ++ Seq(
     organization := "com.socrata",
-    version := "1.1.0-SNAPSHOT",
+    version := "1.1.0",
     scalaVersion := "2.9.2",
     crossScalaVersions := Seq("2.8.1", "2.8.2", "2.9.0", "2.9.0-1", "2.9.1", "2.9.1-1", "2.9.2")
   )
