@@ -3,9 +3,9 @@ package com.socrata.soda2.consumer
 import java.net.URI
 
 import com.socrata.soda2.consumer.impl.{FieldValue, QueryRunner}
-import com.socrata.future.Future
 import com.socrata.iteratee._
 import com.socrata.soda2.{ResourceLike, Resource, Soda2Metadata}
+import scala.concurrent.Future
 
 /** A very high-level interface for running queries against a SODA2 service. */
 class Consumer(val lowLevel: LowLevel) {

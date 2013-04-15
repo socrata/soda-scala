@@ -46,4 +46,3 @@ its underlying engine.  The default client can be retrieved using
 
 * A query-building system richer than raw SoQL strings.
 * More ways to upload data (e.g., from a CSV file).
-* Use native Scala futures in 2.10.

@@ -5,10 +5,10 @@ object Dependencies {
     val asyncHttpClient = "1.7.5"
     val jodaConvert = "1.2"
     val jodaTime = "2.1"
-    val rojomaJson = "2.0.0"
-    val scalaCheck_28 = "1.8"
-    val scalaCheck_29 = "1.10.0"
-    val scalaTest = "1.8"
+    val rojomaJson_29 = "2.0.0"
+    val rojomaJson_210 = "[2.1.0,3.0.0)"
+    val scalaCheck = "1.10.0"
+    val scalaTest = "1.9.1"
     val slf4j = "1.6.6"
   }
 
@@ -18,12 +18,12 @@ object Dependencies {
 
   val jodaTime = "joda-time" % "joda-time" % versions.jodaTime
 
-  val rojomaJson = "com.rojoma" %% "rojoma-json" % versions.rojomaJson
-
-  def scalaCheck(implicit scalaVersion: String) = ScalaVersion.v match {
-    case Scala28 => "org.scalacheck" % "scalacheck_2.8.1" % versions.scalaCheck_28
-    case Scala29 => "org.scalacheck" %% "scalacheck" % versions.scalaCheck_29
+  def rojomaJson(implicit sv: String) = ScalaVersion.v(sv) match {
+    case Scala29 => "com.rojoma" %% "rojoma-json" % versions.rojomaJson_29
+    case Scala210 => "com.rojoma" %% "rojoma-json" % versions.rojomaJson_210
   }
+
+  val scalaCheck = "org.scalacheck" %% "scalacheck" % versions.scalaCheck
 
   val scalaTest = "org.scalatest" %% "scalatest" % versions.scalaTest
 

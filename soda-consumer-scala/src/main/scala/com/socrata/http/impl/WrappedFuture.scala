@@ -1,27 +1,27 @@
 package com.socrata.http
 package impl
 
-import java.util.concurrent.ExecutionException
+import java.util.concurrent.{Executor, ExecutionException}
 
 import com.ning.http.client.ListenableFuture
 
-import com.socrata.future.{ExecutionContext, Promise, Future}
+import scala.concurrent.{Promise, Future, ExecutionContext}
 
 private[http] object WrappedFuture {
-  def apply[A](underlying: ListenableFuture[A])(implicit executionContext: ExecutionContext): Future[A] = {
-    val promise = new Promise[A]
+  def apply[A](underlying: ListenableFuture[A])(implicit executionContext: ExecutionContext with Executor): Future[A] = {
+    val promise = Promise[A]()
     underlying.addListener(new Runnable {
       override def run() {
         try {
-          promise.fulfill(underlying.get())
+          promise.success(underlying.get())
         } catch {
           case e: ExecutionException =>
-            promise.break(e.getCause)
+            promise.failure(e.getCause)
           case e: Throwable =>
-            promise.break(e)
+            promise.failure(e)
         }
       }
-    }, executionContext.asJava)
+    }, executionContext)
     promise.future
   }
 }

@@ -1,8 +1,8 @@
 package com.socrata.soda2.http
 
+import scala.concurrent.ExecutionContext
 import scala.io.Codec
 
-import com.socrata.future.ExecutionContext
 import com.socrata.http.{BodyConsumer, HeadersConsumer, StatusConsumer, Status, Headers}
 
 import impl.{OKHeadersConsumer, AcceptedHeadersConsumer, ErrorHeadersConsumer}

@@ -1,11 +1,14 @@
 package com.socrata.soda2.consumer.http
 
+import scala.concurrent.ExecutionContext
+
+import java.util.concurrent.Executor
+
 import com.ning.http.client.AsyncHttpClient
 
 import com.socrata.soda2.consumer.Consumer
-import com.socrata.future.ExecutionContext
 import com.socrata.http.{Authorization, NoAuth}
-import com.socrata.future.ExecutionContext
+import com.socrata.future.ScheduledExecutionContext
 
 /** An implementation of [[com.socrata.soda2.consumer.Consumer]] which operates on a real HTTP server. */
 class HttpConsumer(lowLevel: LowLevelHttp) extends Consumer(lowLevel) {
@@ -17,7 +20,7 @@ class HttpConsumer(lowLevel: LowLevelHttp) extends Consumer(lowLevel) {
    * @param authorization The authorization strategy to use for making queries with this object.
    * @param executionContext A strategy for starting asynchronous tasks.
    */
-  def this(client: AsyncHttpClient, host: String, port: Int = 443, authorization: Authorization = NoAuth)(implicit executionContext: ExecutionContext) =
+  def this(client: AsyncHttpClient, host: String, port: Int = 443, authorization: Authorization = NoAuth)(implicit executionContext: ExecutionContext with ScheduledExecutionContext with Executor) =
     this(new LowLevelHttp(client, host, port, authorization))
 }
 

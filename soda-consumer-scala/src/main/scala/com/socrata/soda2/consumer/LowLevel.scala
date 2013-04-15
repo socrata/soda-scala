@@ -5,9 +5,9 @@ import java.net.URI
 import com.rojoma.json.ast.JValue
 
 import com.socrata.soda2.consumer.impl.QueryDisambiguator
-import com.socrata.future.Future
 import com.socrata.iteratee.CharIteratee
 import com.socrata.soda2.{Resource, Soda2Metadata}
+import scala.concurrent.Future
 
 // Should this be moved to the soda2 package?  It's not a consumer-specific thing...
 

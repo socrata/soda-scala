@@ -1,9 +1,12 @@
 package com.socrata.soda2.consumer.http
 
+import scala.concurrent.duration._
+import scala.concurrent.{Future, ExecutionContext}
 import scala.collection.JavaConverters._
 import scala.io.Codec
 
 import java.net.{URI, URL}
+import java.util.concurrent.Executor
 
 import com.ning.http.client.AsyncHttpClient
 import com.rojoma.json.ast.{JValue, JObject}
@@ -11,14 +14,14 @@ import com.rojoma.json.ast.{JValue, JObject}
 import com.socrata.soda2.consumer.LowLevel
 import com.socrata.soda2.consumer.impl.ResultProducer
 import com.socrata.soda2.http._
-import com.socrata.future.{ExecutionContext, Future}
 import com.socrata.http.{JsonEntityWriter, Authorization, Headers}
 import com.socrata.http.implicits._
 import com.socrata.iteratee.CharIteratee
 import com.socrata.soda2.{Resource, Soda2Metadata}
+import com.socrata.future.ScheduledExecutionContext
 
 // should this be moved to soda2.http?  See similar comment on LowLevel.
-class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int, val authorization: Authorization)(implicit executionContext: ExecutionContext) extends LowLevel {
+class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int, val authorization: Authorization)(implicit executionContext: ExecutionContext with ScheduledExecutionContext with Executor) extends LowLevel {
   import LowLevelHttp._
 
   def get[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
@@ -98,13 +101,13 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
 
   def maybeRetry[T](x: Retryable[T], progressCallback: JObject => Unit)(onRetry: NewRequest => Future[T]): Future[T] = x match {
     case Right(result) =>
-      Future.now(result)
+      Future.successful(result)
     case Left(newRequest) =>
       log.debug("Got 202; retrying in {}s", newRequest.retryAfter)
       progressCallback(newRequest.details)
-      executionContext.in(newRequest.retryAfter) {
+      executionContext.schedule(newRequest.retryAfter.seconds) {
         onRetry(newRequest)
-      }.flatten
+      }.flatMap(identity)
   }
 
   def maybeRetryGet[T](uri: URI, originalResource: Resource, getParameters: Option[Map[String, Seq[String]]], progressCallback: JObject => Unit, iteratee: (URI, Soda2Metadata) => CharIteratee[T], x: Retryable[T]): Future[T] = maybeRetry(x, progressCallback) {
@@ -174,13 +177,13 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
         obj.get("view") match {
           case Some(JNumber(n)) if n == BigDecimal(0) =>
             log.debug("No pending geocodes; the publish can proceed")
-            Future.now()
+            Future.successful(())
           case Some(JNumber(n)) =>
             log.debug("There are still {} pending geocodes; sleeping for 60s", n)
             progressCallback(obj)
-            executionContext.in(60) {
+            executionContext.schedule(60.seconds) {
               awaitNoPendingGeocodesFor(resource, progressCallback)
-            }.flatten
+            }
           case _ =>
             throw new InvalidResponseJsonException(obj, "Uninterpretable JSON from pending geocode poll")
         }

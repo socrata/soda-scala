@@ -1,6 +1,8 @@
 package com.socrata.soda2.consumer
 package impl
 
+import scala.concurrent.Future
+
 import java.net.URI
 
 import com.rojoma.json.ast.{JObject, JString}
@@ -8,7 +10,6 @@ import com.rojoma.json.util.JsonUtil
 import com.rojoma.json.io.JsonReaderException
 
 import com.socrata.soda2.{ColumnName, Soda2Metadata}
-import com.socrata.future.Future
 import com.socrata.iteratee._
 
 abstract class QueryRunner(lowLevel: LowLevel) {

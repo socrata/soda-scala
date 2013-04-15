@@ -9,9 +9,9 @@ import Dependencies._
 object BuildSettings {
   val buildSettings: Seq[Setting[_]] = Defaults.defaultSettings ++ Seq(
     organization := "com.socrata",
-    version := "1.1.0",
-    scalaVersion := "2.9.2",
-    crossScalaVersions := Seq("2.8.1", "2.8.2", "2.9.0", "2.9.0-1", "2.9.1", "2.9.1-1", "2.9.2")
+    version := "2.0.0-SNAPSHOT",
+    scalaVersion := "2.10.1",
+    crossScalaVersions := Seq("2.9.3", "2.10.1")
   )
 
   def commonProjectSettings(assembly: Boolean = false): Seq[Setting[_]] =
@@ -61,8 +61,8 @@ object BuildSettings {
   )
 
   def compilerFlags(sv: String) = ScalaVersion.v(sv) match {
-    case Scala28 => Seq("-encoding", "UTF-8", "-g", "-unchecked", "-deprecation")
     case Scala29 => Seq("-encoding", "UTF-8", "-g:vars", "-unchecked", "-deprecation")
+    case Scala210 => Seq("-encoding", "UTF-8", "-g:vars", "-unchecked", "-deprecation")
   }
 
   def commonLibraries(implicit scalaVersion: String) = Seq(
