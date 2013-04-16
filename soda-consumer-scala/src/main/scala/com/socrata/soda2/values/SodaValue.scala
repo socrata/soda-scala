@@ -28,6 +28,17 @@ sealed abstract class SodaType {
   def convertFrom(value: JValue): Option[SodaValue]
 }
 
+case class SodaRowIdentifier(value: JValue) extends SodaValue {
+  type ValueType = JValue
+  def sodaType = SodaRowIdentifier
+  def asJson = value
+}
+
+case object SodaRowIdentifier extends SodaType with (JValue => SodaRowIdentifier) {
+  def convertFrom(value: JValue) = Some(SodaRowIdentifier(value))
+  override def toString = "SodaRowIdentifier"
+}
+
 case class SodaString(value: String) extends SodaValue {
   type ValueType = String
   def sodaType = SodaString

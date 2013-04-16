@@ -66,6 +66,7 @@ object RowDecoder {
   }
 
   private val typeMap = Map(
+    "row_id" -> SodaRowIdentifier,
     "string" -> SodaString,
     "blob" -> SodaBlob,
     "link" -> SodaLink,
