@@ -1,5 +1,6 @@
 package com.socrata.soda2.publisher.sample
 
+import scala.concurrent.ExecutionContext.Implicits._
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
@@ -12,7 +13,7 @@ import com.socrata.soda2.publisher.http.HttpPublisher
 import com.socrata.http.BasicAuth
 import com.socrata.soda2.Resource
 import com.socrata.soda2.values.{SodaNumber, SodaString}
-import com.socrata.future.WrappedScheduledExecutionContext
+import com.socrata.future.ExecutionContextTimer.Implicits._
 
 object SimpleUploadSample {
   def main(args: Array[String]) {
@@ -20,9 +21,7 @@ object SimpleUploadSample {
       setSSLContext(SSLContext.getDefault). // Without this, ALL SSL certificates are treated as valid
       build()
     val client = new AsyncHttpClient(clientConfig)
-    val executor = Executors.newScheduledThreadPool(0)
     try {
-      implicit val executionContext = new WrappedScheduledExecutionContext(executor)
       // to run this example, you need a Socrata account from
       // opendata.socrata.com (or any other Socrata-powered data
       // site), a dataset on opendata, and an app token on opendata.

@@ -18,10 +18,10 @@ import com.socrata.http.{JsonEntityWriter, Authorization, Headers}
 import com.socrata.http.implicits._
 import com.socrata.iteratee.CharIteratee
 import com.socrata.soda2.{Resource, Soda2Metadata}
-import com.socrata.future.ScheduledExecutionContext
+import com.socrata.future.ExecutionContextTimer
 
 // should this be moved to soda2.http?  See similar comment on LowLevel.
-class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int, val authorization: Authorization)(implicit executionContext: ExecutionContext with ScheduledExecutionContext with Executor) extends LowLevel {
+class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int, val authorization: Authorization)(implicit executionContext: ExecutionContext, timer: ExecutionContextTimer) extends LowLevel {
   import LowLevelHttp._
 
   def get[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
@@ -105,7 +105,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
     case Left(newRequest) =>
       log.debug("Got 202; retrying in {}s", newRequest.retryAfter)
       progressCallback(newRequest.details)
-      executionContext.schedule(newRequest.retryAfter.seconds) {
+      timer.in(newRequest.retryAfter.seconds) {
         onRetry(newRequest)
       }.flatMap(identity)
   }
@@ -181,7 +181,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
           case Some(JNumber(n)) =>
             log.debug("There are still {} pending geocodes; sleeping for 60s", n)
             progressCallback(obj)
-            executionContext.schedule(60.seconds) {
+            timer.in(60.seconds) {
               awaitNoPendingGeocodesFor(resource, progressCallback)
             }
           case _ =>

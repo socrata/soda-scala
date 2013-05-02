@@ -8,7 +8,7 @@ import com.ning.http.client.ListenableFuture
 import scala.concurrent.{Promise, Future, ExecutionContext}
 
 private[http] object WrappedFuture {
-  def apply[A](underlying: ListenableFuture[A])(implicit executionContext: ExecutionContext with Executor): Future[A] = {
+  def apply[A](underlying: ListenableFuture[A])(implicit executionContext: ExecutionContext): Future[A] = {
     val promise = Promise[A]()
     underlying.addListener(new Runnable {
       override def run() {
@@ -21,7 +21,15 @@ private[http] object WrappedFuture {
             promise.failure(e)
         }
       }
-    }, executionContext)
+    }, executor)
     promise.future
+  }
+
+  private def executor(implicit executionContext: ExecutionContext): Executor = executionContext match {
+    case e: Executor => e
+    case other =>
+      new Executor {
+        def execute(command: Runnable) { executionContext.execute(command) }
+      }
   }
 }

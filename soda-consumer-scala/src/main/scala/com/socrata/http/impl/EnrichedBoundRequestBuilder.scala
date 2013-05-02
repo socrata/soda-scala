@@ -10,11 +10,11 @@ class EnrichedBoundRequestBuilder(b: AsyncHttpClient#BoundRequestBuilder) {
    *
    * @param consumer The entry point into the state machine managed by a [[com.socrata.http.NiceAsyncHandler]]
    * @param executionContext A strategy for starting tasks asynchronously. */
-  def makeRequest[T](consumer: StatusConsumer[T])(implicit executionContext: ExecutionContext with Executor): Future[T] = {
+  def makeRequest[T](consumer: StatusConsumer[T])(implicit executionContext: ExecutionContext): Future[T] = {
     WrappedFuture(b.execute(new NiceAsyncHandler(consumer)))
   }
 
-  def makeRequest()(implicit executionContext: ExecutionContext with Executor): Future[Response] = {
+  def makeRequest()(implicit executionContext: ExecutionContext): Future[Response] = {
     WrappedFuture(b.execute())
   }
 }
