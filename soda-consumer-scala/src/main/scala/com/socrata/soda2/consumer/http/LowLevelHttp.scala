@@ -6,7 +6,6 @@ import scala.collection.JavaConverters._
 import scala.io.Codec
 
 import java.net.{URI, URL}
-import java.util.concurrent.Executor
 
 import com.ning.http.client.AsyncHttpClient
 import com.rojoma.json.ast.{JValue, JObject}
@@ -21,7 +20,7 @@ import com.socrata.soda2.{Resource, Soda2Metadata}
 import com.socrata.future.ExecutionContextTimer
 
 // should this be moved to soda2.http?  See similar comment on LowLevel.
-class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int, val authorization: Authorization)(implicit executionContext: ExecutionContext, timer: ExecutionContextTimer) extends LowLevel {
+class LowLevelHttp(val client: AsyncHttpClient, val logicalHost: String, val physicalHost: String, val port: Int, val secure: Boolean, val authorization: Authorization)(implicit executionContext: ExecutionContext, timer: ExecutionContextTimer) extends LowLevel {
   import LowLevelHttp._
 
   def get[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
@@ -34,6 +33,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
       maybeSetQueryParametersS(queryParameters).
       setFollowRedirects(true).
       setHeader("Accept", "application/json").
+      setHeader("X-Socrata-Host", logicalHost).
       authorize(authorization).
       makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _)))).
       flatMap(maybeRetryGet(uri, originalResource, queryParameters, progressCallback, iteratee, _))
@@ -46,6 +46,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
       maybeSetParametersS(formParameters).
       setFollowRedirects(true).
       setHeader("Accept", "application/json").
+      setHeader("X-Socrata-Host", logicalHost).
       authorize(authorization).
       makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _)))).
       flatMap(maybeRetryForm(uri, originalResource, formParameters, progressCallback, iteratee, _))
@@ -71,6 +72,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
       setFollowRedirects(true).
       setHeader("Accept", "application/json").
       setHeader("Content-type", "application/json; charset=utf-8").
+      setHeader("X-Socrata-Host", logicalHost).
       authorize(authorization).
       setBody(new JsonEntityWriter(body)).
       makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _)))).
@@ -89,12 +91,10 @@ class LowLevelHttp(val client: AsyncHttpClient, val host: String, val port: Int,
     new ResultProducer(codec, iteratee(metadataAsMap.asScala.mapValues(_.asScala.last)))
   }
 
-  val protocol =
-    if(java.lang.Boolean.getBoolean("com.socrata.soda2.forceHttp")) "http"
-    else "https"
+  def protocol = if(secure) "https" else "http"
 
   def uriForPath(path: String) =
-    new URL(protocol, host, port, path).toURI
+    new URL(protocol, physicalHost, port, path).toURI
 
   def uriForResource(resource: Resource) =
     uriForPath("/id/" + resource)
