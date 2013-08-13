@@ -4,7 +4,7 @@ import Keys._
 import Dependencies._
 
 object SodaPublisher {
-  lazy val settings: Seq[Setting[_]] = BuildSettings.commonProjectSettings() ++ BuildSettings.sonatypeSettings ++ Seq(
+  lazy val settings: Seq[Setting[_]] = BuildSettings.commonProjectSettings() ++ Seq(
     libraryDependencies <++= scalaVersion(libraries(_))
   )
 
