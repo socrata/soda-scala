@@ -22,11 +22,6 @@ class EnrichedRequestBuilder[T <: RequestBuilderBase[T]](b: T) {
         b.setRealm(realm).addHeader("X-App-Token", appToken)
     }
 
-  def addHeaders(headers: TraversableOnce[(String, String)]): T =
-    headers.foldLeft(b) { (builder, kv) =>
-      builder.addHeader(kv._1, kv._2)
-    }
-
   /** Replace any existing query parameters with the given ones. */
   def setQueryParametersS(params: Map[String, Seq[String]]) =
     b.setQueryParameters(new FluentStringsMap(params.mapValues(_.asJavaCollection).asJava))
