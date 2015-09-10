@@ -1,13 +1,11 @@
 import sbt._
 import Keys._
 
-import com.socrata.cloudbeessbt.SocrataCloudbeesSbt
 
 import Dependencies._
 
 object BuildSettings {
   val buildSettings: Seq[Setting[_]] = Defaults.defaultSettings ++
-    SocrataCloudbeesSbt.socrataBuildSettings ++
     Seq(
       version := "2.0.0-SNAPSHOT",
       scalaVersion := "2.10.1",
@@ -38,7 +36,6 @@ object BuildSettings {
 
   def commonProjectSettings(assembly: Boolean = false): Seq[Setting[_]] =
     buildSettings ++
-    SocrataCloudbeesSbt.socrataProjectSettings(assembly) ++
     Seq(
       testOptions in Test ++= Seq(
         Tests.Argument(TestFrameworks.ScalaTest, "-oD")
