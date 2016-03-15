@@ -11,7 +11,7 @@ object Build extends sbt.Build {
   private def allOtherProjects =
     for {
       method <- getClass.getDeclaredMethods.toSeq
-      if method.getParameterTypes.isEmpty && classOf[Project].isAssignableFrom(method.getReturnType) && method.getName != "build"
+      if method.isAccessible && method.getParameterTypes.isEmpty && classOf[Project].isAssignableFrom(method.getReturnType) && method.getName != "build"
     } yield method.invoke(this).asInstanceOf[Project] : ProjectReference
 
   private def p(name: String, settings: { def settings: Seq[Setting[_]] }, dependencies: ClasspathDep[ProjectReference]*) =
