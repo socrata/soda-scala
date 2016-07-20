@@ -10,8 +10,6 @@ import com.socrata.future.ExecutionContextTimer
 
 /** An implementation of [[com.socrata.soda2.consumer.Consumer]] which operates on a real HTTP server. */
 class HttpConsumer(lowLevel: LowLevelHttp) extends Consumer(lowLevel) {
-  private[socrata] def this(client: AsyncHttpClient, logicalHost: String, physicalHost: String, port: Int = 443, secure: Boolean = true, authorization: Authorization = NoAuth)(implicit executionContext: ExecutionContext, timer: ExecutionContextTimer) =
-    this(new LowLevelHttp(client, logicalHost, physicalHost, port, secure, authorization))
 
   /** Sets up the application's execution environment for making queries.
    *
@@ -21,8 +19,9 @@ class HttpConsumer(lowLevel: LowLevelHttp) extends Consumer(lowLevel) {
    * @param authorization The authorization strategy to use for making queries with this object.
    * @param executionContext A strategy for starting asynchronous tasks.
    */
-  def this(client: AsyncHttpClient, host: String, port: Int = 443, authorization: Authorization = NoAuth)(implicit executionContext: ExecutionContext, timer: ExecutionContextTimer) =
-    this(client, host, host, port, true, authorization)
+  def this(client: AsyncHttpClient, host: String, port: Int = 443, authorization: Authorization = NoAuth)
+          (implicit executionContext: ExecutionContext, timer: ExecutionContextTimer) =
+    this(new LowLevelHttp(client, host, host, port, true, authorization))
 }
 
 

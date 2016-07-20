@@ -9,7 +9,7 @@ object BuildSettings {
     Seq(
       version := "2.0.0-SNAPSHOT",
       scalaVersion := "2.10.1",
-      crossScalaVersions := Seq("2.9.3", "2.10.1"),
+      crossScalaVersions := Seq("2.10.4", "2.11.8"),
       // random stuff Sonatype wants
       pomExtra := (
         <url>http://www.github.com/socrata/soda-scala</url>
