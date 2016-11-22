@@ -1,7 +1,7 @@
 package com.socrata.soda2.consumer
 package impl
 
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.MustMatchers
 import org.scalatest.WordSpec
 import com.rojoma.json.util.JsonUtil
 
@@ -17,51 +17,51 @@ class QueryRunnerTest extends WordSpec with MustMatchers {
 
   "extractRawSchema" should {
     "fail if there are more fields than types" in {
-      evaluating {
+      an [InvalidMetadataValues] must be thrownBy {
         QueryRunner.extractRawSchema(rawSchema(List("a","b","c"), List("one","two")))
-      } must produce [InvalidMetadataValues]
+      }
     }
 
     "fail if there are fewer fields than types" in {
-      evaluating {
+      an [InvalidMetadataValues] must be thrownBy {
         QueryRunner.extractRawSchema(rawSchema(List("a","b"), List("one","two","three")))
-      } must produce [InvalidMetadataValues]
+      }
     }
 
     "fail if there is no \"fields\" field" in {
-      evaluating {
+      a [MissingMetadataField] must be thrownBy {
         QueryRunner.extractRawSchema(Map("types" -> r("one","two","three")))
-      } must produce [MissingMetadataField]
+      }
     }
 
     "fail if there is no \"types\" field" in {
-      evaluating {
+      a [MissingMetadataField] must be thrownBy {
         QueryRunner.extractRawSchema(Map("fields" -> r("a","b","c")))
-      } must produce [MissingMetadataField]
+      }
     }
 
     "fail if \"fields\" is not valid JSON" in {
-      evaluating {
+      a [MalformedMetadataField] must be thrownBy {
         QueryRunner.extractRawSchema(Map("fields" -> "%#@$^#%$^#@%$", "types" -> "[]"))
-      } must produce [MalformedMetadataField]
+      }
     }
 
     "fail if \"types\" is not valid JSON" in {
-      evaluating {
+      a [MalformedMetadataField] must be thrownBy {
         QueryRunner.extractRawSchema(Map("fields" -> "[]", "types" -> "%#@$^#%$^#@%$"))
-      } must produce [MalformedMetadataField]
+      }
     }
 
     "fail if \"fields\" is not a list of strings" in {
-      evaluating {
+      a [MalformedMetadataField] must be thrownBy {
         QueryRunner.extractRawSchema(Map("fields" -> "[1,2,3]", "types" -> r("a","b","c")))
-      } must produce [MalformedMetadataField]
+      }
     }
 
     "fail if \"types\" is not a list of strings" in {
-      evaluating {
+      a [MalformedMetadataField] must be thrownBy {
         QueryRunner.extractRawSchema(Map("fields" -> r("a","b","c"), "types" -> "%#@$^#%$^#@%$"))
-      } must produce [MalformedMetadataField]
+      }
     }
 
     "produce a map of fields and types if there are the same number" in {

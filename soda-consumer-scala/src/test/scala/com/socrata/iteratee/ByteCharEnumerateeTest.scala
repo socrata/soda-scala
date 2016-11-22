@@ -6,7 +6,7 @@ import java.nio.charset.CodingErrorAction
 import java.nio.ByteBuffer
 
 import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.MustMatchers
 import org.scalatest.prop.PropertyChecks
 import org.scalacheck.{Gen, Arbitrary}
 import collection.mutable
@@ -48,13 +48,13 @@ class ByteCharEnumerateeTest extends WordSpec with MustMatchers with PropertyChe
     "raise an error if endOfInput is called multiple times" in {
       val it = new ByteCharEnumeratee(codec, new StringIteratee)
       it.endOfInput()
-      evaluating { it.endOfInput() } must produce[IllegalStateException]
+      an [IllegalStateException] must be thrownBy { it.endOfInput() }
     }
 
     "raise an error if process is called multiple times" in {
       val it = new ByteCharEnumeratee(codec, new StringIteratee)
       it.process(Array[Byte](1,2,3))
-      evaluating { it.process(Array[Byte](1,2,3)) } must produce[IllegalStateException]
+      an [IllegalStateException] must be thrownBy { it.process(Array[Byte](1,2,3)) }
     }
   }
 }
