@@ -98,25 +98,25 @@ private[consumer] object LegacyRowDecoder {
     case ":id" => value match {
       case JNumber(x) => JString(x.toString)
       case JNull => JNull
-      case _ => error("nyi")
+      case _ => sys.error("nyi")
     }
     case ":created_at" => epoch2iso(fieldName, uri, value)
     case ":position" => value match {
       case JNumber(x) => JString(x.toString)
       case JNull => JNull
-      case _ => error("nyi")
+      case _ => sys.error("nyi")
     }
     case ":meta" => value
     case ":created_meta" => value
     case ":updated_at" => epoch2iso(fieldName, uri, value)
     case ":updated_meta" => value
-    case _ => error("nyi")
+    case _ => sys.error("nyi")
   }
 
   def stars2num(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JNumber(n) => JString(n.toString)
     case JString(s) => JString(s) // already converted
-    case _ => error("NYI")
+    case _ => sys.error("NYI")
   }
 
   def numberify(value: JValue) = value match {
@@ -127,10 +127,10 @@ private[consumer] object LegacyRowDecoder {
         JNumber(BigDecimal(n))
       } catch {
         case _: NumberFormatException =>
-          error("NYI")
+          sys.error("NYI")
       }
     case _ =>
-      error("NYI")
+      sys.error("NYI")
   }
 
   def loc2loc(fieldName: String, uri: URI, value: JValue): JValue = value match {
@@ -156,7 +156,7 @@ private[consumer] object LegacyRowDecoder {
       if(newFields.isEmpty) JNull
       else JObject(newFields)
     case _ =>
-      error("NYI")
+      sys.error("NYI")
   }
 
   def epoch2iso(fieldName: String, uri: URI, value: JValue): JValue = value match {
@@ -170,14 +170,14 @@ private[consumer] object LegacyRowDecoder {
     case n: JNumber =>
       JString(ISODateTimeFormat.dateTime.print(new DateTime(n.toLong * 1000L, DateTimeZone.UTC)))
     case JNull => JNull
-    case _ => error("NYI")
+    case _ => sys.error("NYI")
   }
 
   def photo2link(fieldName: String, uri: URI, value: JValue): JValue = value match {
     case JString(fileIdOrUri) =>
       if(fileIdOrUri.startsWith("/api/")) JString(uri.resolve(fileIdOrUri).toString)
       else JString(uri.resolve("/api/file_data/" + fileIdOrUri).toString)
-    case _ => error("nyi")
+    case _ => sys.error("nyi")
   }
 
   def doc2obj(fieldName: String, uri: URI, value: JValue): JValue = value match {
@@ -189,7 +189,7 @@ private[consumer] object LegacyRowDecoder {
         fields.get("file_id") match {
           case Some(JString(fileId)) => result += "url" -> JString(uri.resolve("/api/file_data/" + fileId).toString)
           case None => // nothing
-          case _ => error("nyi")
+          case _ => sys.error("nyi")
         }
         for(ct <- fields.get("content_type")) result += "content_type" -> ct
         for(fn <- fields.get("filename")) result += "filename" -> fn
@@ -197,6 +197,6 @@ private[consumer] object LegacyRowDecoder {
         if(result.isEmpty) JNull
         else JObject(result)
       }
-    case _ => error("nyi")
+    case _ => sys.error("nyi")
   }
 }

@@ -6,8 +6,8 @@ object Dependencies {
     val jodaConvert = "1.2"
     val jodaTime = "2.1"
     val rojomaJson = "[2.1.0,3.0.0)"
-    val scalaCheck = "1.10.0"
-    val scalaTest = "2.2.6"
+    val scalaCheck = "1.13.4"
+    val scalaTest = "3.0.1"
     val slf4j = "1.6.6"
   }
 

@@ -3,7 +3,7 @@ package com.socrata.soda2.http.impl
 import java.nio.ByteBuffer
 
 import org.scalatest.WordSpec
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.MustMatchers
 import com.socrata.soda2.http.{IllegalResponseCharsetNameException, UnsupportedResponseCharsetException}
 
 class HeadersConsumerUtilsTest extends WordSpec with MustMatchers {
@@ -21,11 +21,11 @@ class HeadersConsumerUtilsTest extends WordSpec with MustMatchers {
     }
 
     "throw an UnsupportedResponseCharsetException for a non-charset" in {
-      evaluating(HeadersConsumerUtils.codecFor("not-a-charset")) must produce[UnsupportedResponseCharsetException]
+      an [UnsupportedResponseCharsetException] must be thrownBy { HeadersConsumerUtils.codecFor("not-a-charset") }
     }
 
     "throw an IllegalResponseCharsetNameException for a malformed charset name" in {
-      evaluating(HeadersConsumerUtils.codecFor("I am not a charset")) must produce[IllegalResponseCharsetNameException]
+      an [IllegalResponseCharsetNameException] must be thrownBy { HeadersConsumerUtils.codecFor("I am not a charset") }
     }
   }
 }

@@ -10,7 +10,7 @@ Soda-Scala is published to maven central.  There are two artifacts,
 read-access.  SBT configuration can be done by adding
 
 ```scala
-libraryDependencies += "com.socrata" %% "soda-publisher-scala" % "1.0.0"
+libraryDependencies += "com.socrata" %% "soda-publisher-scala" % "2.0.0"
 ```
 
 to your `.sbt` file, while for Maven, the pom snippet is:
@@ -20,14 +20,12 @@ to your `.sbt` file, while for Maven, the pom snippet is:
   <dependency>
     <groupId>com.socrata</groupId>
     <artifactId>soda-publisher-scala_${scala.version}</artifactId>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
   </dependency>
 </dependencies>
 ```
 
-Soda-scala is published for Scala versions 2.8.1, 2.8.2, 2.9.0,
-2.9.0-1, 2.9.1, 2.9.1-1, and 2.9.2.
-
+Soda-scala is published for Scala versions 2.10.4, 2.11.8 and 2.12.0.
 ## Sample code
 
 The soda-scala-sample subproject contains sample code for reading and
