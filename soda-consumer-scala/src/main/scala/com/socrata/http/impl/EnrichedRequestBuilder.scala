@@ -2,8 +2,7 @@ package com.socrata.http
 package impl
 
 import scala.collection.JavaConverters._
-
-import com.ning.http.client.{FluentStringsMap, Realm, RequestBuilderBase}
+import com.ning.http.client.{Cookie, FluentStringsMap, Realm, RequestBuilderBase}
 import com.ning.http.client.Realm.RealmBuilder
 
 class EnrichedRequestBuilder[T <: RequestBuilderBase[T]](b: T) {
@@ -20,6 +19,8 @@ class EnrichedRequestBuilder[T <: RequestBuilderBase[T]](b: T) {
           setUsePreemptiveAuth(true).
           build()
         b.setRealm(realm).addHeader("X-App-Token", appToken)
+      case CookieAuth(cookie) =>
+        b.addCookie(new Cookie(null, "_core_session_id", cookie, null, -1, false))
     }
 
   /** Replace any existing query parameters with the given ones. */
