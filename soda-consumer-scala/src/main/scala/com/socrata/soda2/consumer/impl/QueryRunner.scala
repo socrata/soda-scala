@@ -54,7 +54,7 @@ object QueryRunner {
   def rowDecoderFor(uri: URI, metadata: Soda2Metadata): JObject => Row = {
     val rawSchema = extractRawSchema(metadata)
     metadata.getOrElse("Legacy-Types", "false") match {
-      case "true" => new LegacyRowDecoder(uri, rawSchema)
+      case "true" => LegacyRowDecoder(uri, rawSchema)
       case _ => new RowDecoder(uri, rawSchema)
     }
   }

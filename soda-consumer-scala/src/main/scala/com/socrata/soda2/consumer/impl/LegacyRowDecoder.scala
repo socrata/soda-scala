@@ -3,32 +3,39 @@ package impl
 
 import java.net.URI
 
-import com.rojoma.json.ast._
-
-import com.socrata.soda2.{UnknownTypeException, ColumnName}
+import com.rojoma.json.ast.{JObject, _}
+import com.rojoma.json.io.{JsonReader, JsonReaderException}
+import com.socrata.soda2.ColumnName
 import com.socrata.soda2.values._
-import org.joda.time.format.{DateTimeFormatterBuilder, ISODateTimeFormat}
-import com.rojoma.json.io.{JsonReaderException, JsonReader}
-import org.joda.time.{DateTimeZone, DateTime}
-
-private[consumer] class LegacyRowDecoder(datasetBase: URI, rawSchema: Map[ColumnName, String]) extends (JObject => Row) {
-  import LegacyRowDecoder._
-
-  val rowDecoder = new RowDecoder(datasetBase, rawSchema.map(conversionForType).toMap)
-
-  val schema = rawSchema.map { case (k,v) => k.toString -> v }
-
-  def apply(rawRow: JObject): Row = {
-    val soda2ified = rawRow.fields.collect { case (field, rawValue) if schema.contains(field) =>
-      field -> conversionForValue(schema(field))(field, datasetBase, rawValue)
-    }
-    rowDecoder(JObject(soda2ified.filterNot(_._2  == JNull)))
-  }
-}
+import org.joda.time.format.ISODateTimeFormat
+import org.joda.time.{DateTime, DateTimeZone}
 
 private[consumer] object LegacyRowDecoder {
-  val conversionForType: ((ColumnName, String)) => (ColumnName, SodaType) = { case (col, rawType) =>
-    col -> typeMap.getOrElse(rawType, throw new UnknownTypeException(rawType))(col.toString)
+
+  def apply(datasetBase: URI, rawSchema: Map[ColumnName, String]): JObject => Row =
+    sodaify(datasetBase, rawSchema).andThen(new RowDecoder(datasetBase, convertTypes(rawSchema)))
+
+  def convertTypes(rawSchema: Map[ColumnName, String]): Map[ColumnName, SodaType] =
+    for {
+      (col, rawType) <- rawSchema
+      typeF <- typeMap.get(rawType)
+    } yield col -> typeF(col.toString)
+
+  def sodaify(datasetBase: URI, rawSchema: Map[ColumnName, String]): JObject => JObject = {
+    val schema =
+      for {
+        (k, v) <- rawSchema
+        if typeMap.contains(k.toString)
+      } yield k.toString -> v
+
+    json => JObject {
+      for {
+        (field, rawValue) <- json.fields
+        tpe <- schema.get(field)
+        value = conversionForValue(tpe)(field, datasetBase, rawValue)
+        if value != JNull
+      } yield field -> value
+    }
   }
 
   def k(x: SodaType) = (_: String) => x
@@ -54,7 +61,6 @@ private[consumer] object LegacyRowDecoder {
     "document" -> k(SodaObject),
     "nested_table" -> k(SodaObject),
     "meta_data" -> selectMetadataType _
-    // TODO: dataset link, which is a wildly ill-thought-out misfeature
   )
 
   def selectMetadataType(columnName: String): SodaType = columnName match {
@@ -91,7 +97,6 @@ private[consumer] object LegacyRowDecoder {
     "document" -> doc2obj,
     "nested_table" -> id,
     "meta_data" -> metadata2thing
-  // TODO: dataset link, which is a wildly ill-thought-out misfeature
   )
 
   def metadata2thing(fieldName: String, uri: URI, value: JValue): JValue = fieldName match {
