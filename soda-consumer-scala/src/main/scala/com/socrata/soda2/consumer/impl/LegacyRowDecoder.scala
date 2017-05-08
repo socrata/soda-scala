@@ -25,7 +25,7 @@ private[consumer] object LegacyRowDecoder {
     val schema =
       for {
         (k, v) <- rawSchema
-        if typeMap.contains(k.toString)
+        if typeMap.contains(v)
       } yield k.toString -> v
 
     json => JObject {
