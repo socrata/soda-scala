@@ -39,6 +39,17 @@ case object SodaRowIdentifier extends SodaType with (JValue => SodaRowIdentifier
   override def toString = "SodaRowIdentifier"
 }
 
+case class SodaRowVersion(value: JValue) extends SodaValue {
+  type ValueType = JValue
+  def sodaType = SodaRowVersion
+  def asJson = value
+}
+
+case object SodaRowVersion extends SodaType with (JValue => SodaRowVersion) {
+  def convertFrom(value: JValue) = Some(SodaRowVersion(value))
+  override def toString = "SodaRowVersion"
+}
+
 case class SodaString(value: String) extends SodaValue {
   type ValueType = String
   def sodaType = SodaString
