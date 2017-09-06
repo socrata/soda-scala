@@ -175,7 +175,7 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
     def decode(v: JValue) = Pattern.matches(v).map { results =>
       val coords = for {
         lat <- latitude.get(results)
-        lon <- latitude.get(results)
+        lon <- longitude.get(results)
       } yield (lat, lon)
       SodaLocation(address.get(results), city.get(results), state.get(results), zip.get(results), coords)
     }
