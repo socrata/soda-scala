@@ -76,6 +76,7 @@ object RowDecoder {
     "money" -> SodaMoney,
     "geospatial" -> SodaGeospatial,
     "location" -> SodaLocation,
+    "point" -> SodaLocation,
     "boolean" -> SodaBoolean,
     "floating_timestamp" -> SodaFloatingTimestamp,
     "fixed_timestamp" -> SodaFixedTimestamp,

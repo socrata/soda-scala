@@ -2,17 +2,11 @@ package com.socrata.soda2.values
 
 import java.net.URI
 
-import com.rojoma.json.ast._
-import com.rojoma.json.matcher._
-import org.joda.time.{DateTime, LocalDateTime}
-
+import com.rojoma.json.ast.{JArray, JString, _}
 import com.rojoma.json.codec.JsonCodec
-import com.rojoma.json.matcher.PObject
-import scala.Some
-import com.rojoma.json.ast.JArray
-import com.rojoma.json.ast.JString
-import com.rojoma.json.matcher.POption
+import com.rojoma.json.matcher.{PObject, POption, _}
 import org.joda.time.format.ISODateTimeFormat
+import org.joda.time.{DateTime, LocalDateTime}
 
 sealed abstract class SodaValue {
   type ValueType
@@ -20,9 +14,6 @@ sealed abstract class SodaValue {
   def asJson: JValue
   def value:ValueType
 }
-
-
-
 
 sealed abstract class SodaType {
   def convertFrom(value: JValue): Option[SodaValue]
@@ -166,17 +157,23 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
       "state" -> POption(state).orNull,
       "zip" -> POption(zip).orNull)).orNull)
 
+  private val pointPattern = PObject(
+    "type" -> JString("Point"),
+    "coordinates" -> PArray(latitude, longitude)
+  )
+
   implicit val jsonCodec = new JsonCodec[SodaLocation] {
     def encode(x: SodaLocation) =
       Pattern.generate(address :=? x.address, city :=? x.city, state :=? x.state, zip :=? x.zip,
         latitude :=? x.coordinates.map(_._1),
         longitude :=? x.coordinates.map(_._2))
 
-    def decode(v: JValue) = Pattern.matches(v).map { results =>
+    def decode(v: JValue) = pointPattern.matches(v).orElse(Pattern.matches(v)).map { results =>
       val coords = for {
         lat <- latitude.get(results)
         lon <- longitude.get(results)
       } yield (lat, lon)
+
       SodaLocation(address.get(results), city.get(results), state.get(results), zip.get(results), coords)
     }
   }
