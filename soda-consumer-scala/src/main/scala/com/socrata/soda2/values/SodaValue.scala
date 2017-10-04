@@ -159,7 +159,7 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
 
   private val pointPattern = PObject(
     "type" -> JString("Point"),
-    "coordinates" -> PArray(latitude, longitude)
+    "coordinates" -> PArray(longitude, latitude)
   )
 
   implicit val jsonCodec = new JsonCodec[SodaLocation] {
@@ -170,9 +170,9 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
 
     def decode(v: JValue) = pointPattern.matches(v).orElse(Pattern.matches(v)).map { results =>
       val coords = for {
-        lat <- latitude.get(results)
         lon <- longitude.get(results)
-      } yield (lat, lon)
+        lat <- latitude.get(results)
+      } yield (lon, lat)
 
       SodaLocation(address.get(results), city.get(results), state.get(results), zip.get(results), coords)
     }
