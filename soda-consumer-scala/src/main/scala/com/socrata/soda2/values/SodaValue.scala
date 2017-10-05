@@ -2,17 +2,11 @@ package com.socrata.soda2.values
 
 import java.net.URI
 
-import com.rojoma.json.ast._
-import com.rojoma.json.matcher._
-import org.joda.time.{DateTime, LocalDateTime}
-
+import com.rojoma.json.ast.{JArray, JString, _}
 import com.rojoma.json.codec.JsonCodec
-import com.rojoma.json.matcher.PObject
-import scala.Some
-import com.rojoma.json.ast.JArray
-import com.rojoma.json.ast.JString
-import com.rojoma.json.matcher.POption
+import com.rojoma.json.matcher.{PObject, POption, _}
 import org.joda.time.format.ISODateTimeFormat
+import org.joda.time.{DateTime, LocalDateTime}
 
 sealed abstract class SodaValue {
   type ValueType
@@ -20,9 +14,6 @@ sealed abstract class SodaValue {
   def asJson: JValue
   def value:ValueType
 }
-
-
-
 
 sealed abstract class SodaType {
   def convertFrom(value: JValue): Option[SodaValue]
@@ -177,6 +168,7 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
         lat <- latitude.get(results)
         lon <- longitude.get(results)
       } yield (lat, lon)
+
       SodaLocation(address.get(results), city.get(results), state.get(results), zip.get(results), coords)
     }
   }
@@ -184,6 +176,44 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
   def convertFrom(value: JValue) = JsonCodec[SodaLocation].decode(value)
 
   override def toString = "SodaLocation"
+}
+
+case class SodaPoint(coordinates: Option[(Double, Double)]) extends SodaValue {
+  type ValueType = SodaPoint
+  def sodaType = SodaPoint
+  def asJson = SodaPoint.jsonCodec.encode(this)
+  def value = this
+}
+
+case object SodaPoint extends SodaType with ((Option[(Double, Double)]) => SodaPoint) {
+  private val longitude = Variable[Double]
+  private val latitude = Variable[Double]
+
+  private val pattern = PObject(
+    "type" -> JString("Point"),
+    "coordinates" -> PArray(
+      POption(longitude).orNull.subPattern,
+      POption(latitude).orNull.subPattern
+    )
+  )
+
+  implicit val jsonCodec = new JsonCodec[SodaPoint] {
+    def encode(x: SodaPoint) =
+      pattern.generate(longitude :=? x.coordinates.map(_._1), latitude :=? x.coordinates.map(_._2))
+
+    def decode(v: JValue) = pattern.matches(v).map { results =>
+      val coords = for {
+        lon <- longitude.get(results)
+        lat <- latitude.get(results)
+      } yield (lon, lat)
+
+      SodaPoint(coords)
+    }
+  }
+
+  def convertFrom(value: JValue) = JsonCodec[SodaPoint].decode(value)
+
+  override def toString = "SodaPoint"
 }
 
 case class SodaBoolean(value: Boolean) extends SodaValue {

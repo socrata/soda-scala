@@ -3,10 +3,9 @@ package impl
 
 import java.net.URI
 
-import com.rojoma.json.ast.{JString, JObject}
-
-import com.socrata.soda2.{UnknownTypeException, ColumnNameLike, ColumnName}
+import com.rojoma.json.ast.{JObject, JString}
 import com.socrata.soda2.values._
+import com.socrata.soda2.{ColumnName, ColumnNameLike, UnknownTypeException}
 
 class RowDecoder(datasetBase: URI, schema: Map[ColumnName, SodaType]) extends (JObject => Row) {
   def this(datasetBase: URI, rawSchema: Map[ColumnName, String])(implicit disambiguator: QueryDisambiguator) =
@@ -76,6 +75,12 @@ object RowDecoder {
     "money" -> SodaMoney,
     "geospatial" -> SodaGeospatial,
     "location" -> SodaLocation,
+    "point" -> SodaPoint,
+    "multi_point" -> SodaGeospatial,
+    "line_string" -> SodaGeospatial,
+    "multi_line_string" -> SodaGeospatial,
+    "polygon" -> SodaGeospatial,
+    "multi_polygon" -> SodaGeospatial,
     "boolean" -> SodaBoolean,
     "floating_timestamp" -> SodaFloatingTimestamp,
     "fixed_timestamp" -> SodaFixedTimestamp,
