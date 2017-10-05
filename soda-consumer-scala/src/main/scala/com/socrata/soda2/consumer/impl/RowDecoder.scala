@@ -80,6 +80,12 @@ object RowDecoder {
     "floating_timestamp" -> SodaFloatingTimestamp,
     "fixed_timestamp" -> SodaFixedTimestamp,
     "array" -> SodaArray,
-    "object" -> SodaObject
+    "object" -> SodaObject,
+    "point" -> SodaPoint,
+    "multi_point" -> SodaMultiPoint,
+    "line_string" -> SodaLineString,
+    "multi_line_string" -> SodaMultiLineString,
+    "polygon" -> SodaPolygon,
+    "multi_polygon" -> SodaMultiPolygon
   )
 }

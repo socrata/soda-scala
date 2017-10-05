@@ -276,3 +276,195 @@ case object SodaObject extends SodaType with (JObject => SodaObject) {
   def convertFrom(value: JValue) = value.cast[JObject].map(SodaObject)
   override def toString = "SodaObject"
 }
+
+case class SodaPoint(latitude: Double, longitude: Double) extends SodaValue {
+  type ValueType = SodaPoint
+  def asJson = SodaPoint.jsonCodec.encode(this)
+  def sodaType = SodaPoint
+  def value = this
+}
+
+object SodaPoint extends SodaType with ((Double, Double) => SodaPoint) {
+  private[values] val simplePoint = new JsonCodec[SodaPoint] {
+    private val latitude = Variable[Double]
+    private val longitude = Variable[Double]
+    private val Pattern = PArray(longitude, latitude)
+
+    def encode(x: SodaPoint) =
+      Pattern.generate(latitude := x.latitude,
+                       longitude := x.longitude)
+
+
+    def decode(v: JValue) = Pattern.matches(v) map { results =>
+      SodaPoint(latitude(results), longitude(results))
+    }
+  }
+
+  implicit val jsonCodec = new JsonCodec[SodaPoint] {
+    private val point = Variable[SodaPoint]()(simplePoint)
+    private val Pattern = PObject(
+      "type" -> "Point",
+      "coordinates" -> point
+    )
+
+    def encode(x: SodaPoint) = Pattern.generate(point := x)
+
+    def decode(v: JValue) = Pattern.matches(v) map { results =>
+      point(results)
+    }
+  }
+
+  def convertFrom(value: JValue) = JsonCodec[SodaPoint].decode(value)
+}
+
+case class SodaMultiPoint(points: Seq[SodaPoint]) extends SodaValue {
+  type ValueType = SodaMultiPoint
+  def asJson = SodaMultiPoint.jsonCodec.encode(this)
+  def sodaType = SodaMultiPoint
+  def value = this
+}
+
+case object SodaMultiPoint extends SodaType with (Seq[SodaPoint] => SodaMultiPoint) {
+  implicit val jsonCodec = new JsonCodec[SodaMultiPoint] {
+    val points = Variable[Seq[SodaPoint]]()(JsonCodec.seqCodec(SodaPoint.simplePoint, implicitly))
+    private val Pattern = PObject(
+      "type" -> "MultiPoint",
+      "coordinates" -> points
+    )
+
+    def encode(x: SodaMultiPoint) = Pattern.generate(points := x.points)
+
+    def decode(v: JValue) = Pattern.matches(v) map { results =>
+      SodaMultiPoint(points(results))
+    }
+  }
+
+  def convertFrom(value: JValue) = JsonCodec[SodaMultiPoint].decode(value)
+}
+
+case class SodaLineString(points: Seq[SodaPoint]) extends SodaValue {
+  type ValueType = SodaLineString
+  def asJson = SodaLineString.jsonCodec.encode(this)
+  def sodaType = SodaLineString
+  def value = this
+}
+
+case object SodaLineString extends SodaType with (Seq[SodaPoint] => SodaLineString) {
+  private[values] val simpleLineString = new JsonCodec[SodaLineString] {
+    private val base = JsonCodec.seqCodec[SodaPoint, Seq](SodaPoint.simplePoint, implicitly)
+    def encode(x: SodaLineString) = base.encode(x.points)
+    def decode(v: JValue) = base.decode(v).map(SodaLineString)
+  }
+
+  implicit val jsonCodec = new JsonCodec[SodaLineString] {
+    private val points = Variable[SodaLineString]()(simpleLineString)
+    private val Pattern = PObject(
+      "type" -> "LineString",
+      "coordinates" -> points
+    )
+
+    def encode(x: SodaLineString) = Pattern.generate(points := x)
+
+    def decode(v: JValue) = Pattern.matches(v) map { results =>
+      points(results)
+    }
+  }
+
+  def convertFrom(value: JValue) = JsonCodec[SodaLineString].decode(value)
+}
+
+case class SodaMultiLineString(lines: Seq[SodaLineString]) extends SodaValue {
+  type ValueType = SodaMultiLineString
+  def asJson = SodaMultiLineString.jsonCodec.encode(this)
+  def sodaType = SodaMultiLineString
+  def value = this
+}
+
+case object SodaMultiLineString extends SodaType with (Seq[SodaLineString] => SodaMultiLineString) {
+  implicit val jsonCodec = new JsonCodec[SodaMultiLineString] {
+    private val lines = Variable[Seq[SodaLineString]]()(JsonCodec.seqCodec(SodaLineString.simpleLineString, implicitly))
+    private val Pattern = PObject(
+      "type" -> "MultiLineString",
+      "coordinates" -> lines
+    )
+
+    def encode(x: SodaMultiLineString) = Pattern.generate(lines := x.lines)
+
+    def decode(v: JValue) = Pattern.matches(v) map { results =>
+      SodaMultiLineString(lines(results))
+    }
+  }
+
+  def convertFrom(value: JValue) = JsonCodec[SodaMultiLineString].decode(value)
+}
+
+case class SodaPolygon(ring: Seq[SodaPoint], holes: Seq[Seq[SodaPoint]]) extends SodaValue {
+  type ValueType = SodaPolygon
+  def asJson = SodaPolygon.jsonCodec.encode(this)
+  def sodaType = SodaPolygon
+  def value = this
+}
+
+case object SodaPolygon extends SodaType with ((Seq[SodaPoint], Seq[Seq[SodaPoint]]) => SodaPolygon) {
+  private[values] val simplePolygon = new JsonCodec[SodaPolygon] {
+    private val ring = JsonCodec.seqCodec[SodaPoint, Seq](SodaPoint.simplePoint, implicitly)
+    private val holes = JsonCodec.seqCodec[Seq[SodaPoint], Seq](ring, implicitly)
+    def encode(x: SodaPolygon) = {
+      val r = ring.encode(x.ring)
+      val JArray(hs) = holes.encode(x.holes)
+      JArray(r +: hs)
+    }
+    def decode(v: JValue) = v match {
+      case JArray(items) if items.nonEmpty =>
+        val jr = items.head
+        val jhs = items.tail
+        for {
+          r <- ring.decode(jr)
+          hs <- holes.decode(JArray(jhs))
+        } yield SodaPolygon(r, hs)
+      case _ =>
+        None
+    }
+  }
+
+  implicit val jsonCodec = new JsonCodec[SodaPolygon] {
+    val points = Variable[SodaPolygon]()(simplePolygon)
+    private val Pattern = PObject(
+      "type" -> "Polygon",
+      "coordinates" -> points
+    )
+
+    def encode(x: SodaPolygon) = Pattern.generate(points := x)
+
+    def decode(v: JValue) = Pattern.matches(v) map { results =>
+      points(results)
+    }
+  }
+
+  def convertFrom(value: JValue) = JsonCodec[SodaPolygon].decode(value)
+}
+
+case class SodaMultiPolygon(polygons: Seq[SodaPolygon]) extends SodaValue {
+  type ValueType = SodaMultiPolygon
+  def asJson = SodaMultiPolygon.jsonCodec.encode(this)
+  def sodaType = SodaMultiPolygon
+  def value = this
+}
+
+case object SodaMultiPolygon extends SodaType with (Seq[SodaPolygon] => SodaMultiPolygon) {
+  implicit val jsonCodec = new JsonCodec[SodaMultiPolygon] {
+    private val polygons = Variable[Seq[SodaPolygon]]()(JsonCodec.seqCodec(SodaPolygon.simplePolygon, implicitly))
+    private val Pattern = PObject(
+      "type" -> "MultiPolygon",
+      "coordinates" -> polygons
+    )
+
+    def encode(x: SodaMultiPolygon) = Pattern.generate(polygons := x.polygons)
+
+    def decode(v: JValue) = Pattern.matches(v) map { results =>
+      SodaMultiPolygon(polygons(results))
+    }
+  }
+
+  def convertFrom(value: JValue) = JsonCodec[SodaMultiPolygon].decode(value)
+}
