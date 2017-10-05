@@ -157,22 +157,17 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
       "state" -> POption(state).orNull,
       "zip" -> POption(zip).orNull)).orNull)
 
-  private val pointPattern = PObject(
-    "type" -> JString("Point"),
-    "coordinates" -> PArray(longitude, latitude)
-  )
-
   implicit val jsonCodec = new JsonCodec[SodaLocation] {
     def encode(x: SodaLocation) =
       Pattern.generate(address :=? x.address, city :=? x.city, state :=? x.state, zip :=? x.zip,
         latitude :=? x.coordinates.map(_._1),
         longitude :=? x.coordinates.map(_._2))
 
-    def decode(v: JValue) = pointPattern.matches(v).orElse(Pattern.matches(v)).map { results =>
+    def decode(v: JValue) = Pattern.matches(v).map { results =>
       val coords = for {
-        lon <- longitude.get(results)
         lat <- latitude.get(results)
-      } yield (lon, lat)
+        lon <- longitude.get(results)
+      } yield (lat, lon)
 
       SodaLocation(address.get(results), city.get(results), state.get(results), zip.get(results), coords)
     }
@@ -181,6 +176,44 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
   def convertFrom(value: JValue) = JsonCodec[SodaLocation].decode(value)
 
   override def toString = "SodaLocation"
+}
+
+case class SodaPoint(coordinates: Option[(Double, Double)]) extends SodaValue {
+  type ValueType = SodaPoint
+  def sodaType = SodaPoint
+  def asJson = SodaPoint.jsonCodec.encode(this)
+  def value = this
+}
+
+case object SodaPoint extends SodaType with ((Option[(Double, Double)]) => SodaPoint) {
+  private val longitude = Variable[Double]
+  private val latitude = Variable[Double]
+
+  private val pattern = PObject(
+    "type" -> JString("Point"),
+    "coordinates" -> PArray(
+      POption(longitude).orNull.subPattern,
+      POption(latitude).orNull.subPattern
+    )
+  )
+
+  implicit val jsonCodec = new JsonCodec[SodaPoint] {
+    def encode(x: SodaPoint) =
+      pattern.generate(longitude :=? x.coordinates.map(_._1), latitude :=? x.coordinates.map(_._2))
+
+    def decode(v: JValue) = pattern.matches(v).map { results =>
+      val coords = for {
+        lon <- longitude.get(results)
+        lat <- latitude.get(results)
+      } yield (lon, lat)
+
+      SodaPoint(coords)
+    }
+  }
+
+  def convertFrom(value: JValue) = JsonCodec[SodaPoint].decode(value)
+
+  override def toString = "SodaPoint"
 }
 
 case class SodaBoolean(value: Boolean) extends SodaValue {

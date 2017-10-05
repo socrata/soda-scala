@@ -75,7 +75,7 @@ object RowDecoder {
     "money" -> SodaMoney,
     "geospatial" -> SodaGeospatial,
     "location" -> SodaLocation,
-    "point" -> SodaLocation,
+    "point" -> SodaPoint,
     "multi_point" -> SodaGeospatial,
     "line_string" -> SodaGeospatial,
     "multi_line_string" -> SodaGeospatial,
