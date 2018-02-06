@@ -20,8 +20,12 @@ import com.socrata.soda2.{Resource, Soda2Metadata}
 import com.socrata.future.ExecutionContextTimer
 
 // should this be moved to soda2.http?  See similar comment on LowLevel.
-class LowLevelHttp(val client: AsyncHttpClient, val logicalHost: String, val physicalHost: String, val port: Int, val secure: Boolean, val authorization: Authorization)(implicit executionContext: ExecutionContext, timer: ExecutionContextTimer) extends LowLevel {
+class LowLevelHttp(val client: AsyncHttpClient, val logicalHost: String, val physicalHost: String, val port: Int, val secure: Boolean, val authorization: Authorization, val requestId: Option[String])(implicit executionContext: ExecutionContext, timer: ExecutionContextTimer) extends LowLevel {
   import LowLevelHttp._
+
+  def this(client: AsyncHttpClient, logicalHost: String, physicalHost: String, port: Int, secure: Boolean, authorization: Authorization)
+          (implicit executionContext: ExecutionContext, timer: ExecutionContextTimer) =
+    this(client, logicalHost, physicalHost, port, secure, authorization, None)
 
   def get[T](resource: Resource, getParameters: Map[String, Seq[String]], iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] =
     get(uriForResource(resource), resource, Some(getParameters), noCallback, iteratee)
@@ -34,6 +38,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val logicalHost: String, val phy
       setFollowRedirects(true).
       setHeader("Accept", "application/json").
       setHeader("X-Socrata-Host", logicalHost).
+      maybeSetRequestId(requestId).
       authorize(authorization).
       makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _)))).
       flatMap(maybeRetryGet(uri, originalResource, queryParameters, progressCallback, iteratee, _))
@@ -47,6 +52,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val logicalHost: String, val phy
       setFollowRedirects(true).
       setHeader("Accept", "application/json").
       setHeader("X-Socrata-Host", logicalHost).
+      maybeSetRequestId(requestId).
       authorize(authorization).
       makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _)))).
       flatMap(maybeRetryForm(uri, originalResource, formParameters, progressCallback, iteratee, _))
@@ -73,6 +79,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val logicalHost: String, val phy
       setHeader("Accept", "application/json").
       setHeader("Content-type", "application/json; charset=utf-8").
       setHeader("X-Socrata-Host", logicalHost).
+      maybeSetRequestId(requestId).
       authorize(authorization).
       setBody(new JsonEntityWriter(body)).
       makeRequest(new StandardConsumer(originalResource, bodyConsumer(_, _, iteratee(uri, _)))).
