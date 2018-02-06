@@ -19,9 +19,9 @@ class HttpConsumer(lowLevel: LowLevelHttp) extends Consumer(lowLevel) {
    * @param authorization The authorization strategy to use for making queries with this object.
    * @param executionContext A strategy for starting asynchronous tasks.
    */
-  def this(client: AsyncHttpClient, host: String, port: Int = 443, authorization: Authorization = NoAuth)
+  def this(client: AsyncHttpClient, host: String, port: Int = 443, authorization: Authorization = NoAuth, requestId: String = null)
           (implicit executionContext: ExecutionContext, timer: ExecutionContextTimer) =
-    this(new LowLevelHttp(client, host, host, port, true, authorization))
+    this(new LowLevelHttp(client, host, host, port, true, authorization, requestId))
 }
 
 
