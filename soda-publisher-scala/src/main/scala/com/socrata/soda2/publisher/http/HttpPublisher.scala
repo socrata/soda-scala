@@ -11,7 +11,11 @@ import com.socrata.future.ExecutionContextTimer
 
 class HttpPublisher(lowLevel: LowLevelHttp) extends HttpConsumer(lowLevel) with Publisher {
 
-  def this(client: AsyncHttpClient, host: String, port: Int = 443, authorization: Authorization = NoAuth, requestId: String = null)
+  def this(client: AsyncHttpClient, host: String, port: Int = 443, authorization: Authorization = NoAuth)
+          (implicit executionContext: ExecutionContext, timer: ExecutionContextTimer) =
+    this(new LowLevelHttp(client, host, host, port, true, authorization))
+
+  def this(client: AsyncHttpClient, host: String, port: Int, authorization: Authorization, requestId: Option[String])
           (implicit executionContext: ExecutionContext, timer: ExecutionContextTimer) =
     this(new LowLevelHttp(client, host, host, port, true, authorization, requestId))
 }

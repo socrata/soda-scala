@@ -23,6 +23,10 @@ class EnrichedRequestBuilder[T <: RequestBuilderBase[T]](b: T) {
         b.addCookie(new Cookie(null, "_core_session_id", cookie, null, -1, false))
     }
 
+  /** Set request ID header if given */
+  def maybeSetRequestId(requestId: Option[String]): T =
+    requestId.fold(b)(b.setHeader("X-Socrata-RequestId", _))
+
   /** Replace any existing query parameters with the given ones. */
   def setQueryParametersS(params: Map[String, Seq[String]]) =
     b.setQueryParameters(new FluentStringsMap(params.mapValues(_.asJavaCollection).asJava))
