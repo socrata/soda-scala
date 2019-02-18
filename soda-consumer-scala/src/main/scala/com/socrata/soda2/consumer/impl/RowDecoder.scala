@@ -77,8 +77,10 @@ object RowDecoder {
     "geospatial" -> SodaGeospatial,
     "location" -> SodaLocation,
     "boolean" -> SodaBoolean,
+    "checkbox" -> SodaBoolean, // old name
     "floating_timestamp" -> SodaFloatingTimestamp,
     "fixed_timestamp" -> SodaFixedTimestamp,
+    "calendar_date" -> SodaFloatingTimestamp, // old name
     "array" -> SodaArray,
     "object" -> SodaObject,
     "point" -> SodaPoint,
@@ -86,8 +88,6 @@ object RowDecoder {
     "line_string" -> SodaLineString,
     "multi_line_string" -> SodaMultiLineString,
     "polygon" -> SodaPolygon,
-    "multi_polygon" -> SodaMultiPolygon,
-    "calendar_date" -> SodaFloatingTimestamp,
-    "checkbox" -> SodaBoolean
+    "multi_polygon" -> SodaMultiPolygon
   )
 }
