@@ -79,8 +79,8 @@ object RowDecoder {
     "boolean" -> SodaBoolean,
     "checkbox" -> SodaBoolean, // old name
     "floating_timestamp" -> SodaFloatingTimestamp,
-    "fixed_timestamp" -> SodaFixedTimestamp,
     "calendar_date" -> SodaFloatingTimestamp, // old name
+    "fixed_timestamp" -> SodaFixedTimestamp,
     "array" -> SodaArray,
     "object" -> SodaObject,
     "point" -> SodaPoint,
