@@ -87,7 +87,7 @@ object RowDecoder {
     "multi_line_string" -> SodaMultiLineString,
     "polygon" -> SodaPolygon,
     "multi_polygon" -> SodaMultiPolygon,
-    "calendar_date" -> SodaFixedTimestamp,
+    "calendar_date" -> SodaFloatingTimestamp,
     "checkbox" -> SodaBoolean
   )
 }
