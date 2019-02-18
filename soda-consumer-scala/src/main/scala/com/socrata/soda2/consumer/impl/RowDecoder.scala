@@ -76,10 +76,10 @@ object RowDecoder {
     "money" -> SodaMoney,
     "geospatial" -> SodaGeospatial,
     "location" -> SodaLocation,
-    "boolean" -> SodaBoolean,
     "checkbox" -> SodaBoolean, // old name
-    "floating_timestamp" -> SodaFloatingTimestamp,
+    "boolean" -> SodaBoolean,
     "calendar_date" -> SodaFloatingTimestamp, // old name
+    "floating_timestamp" -> SodaFloatingTimestamp,
     "fixed_timestamp" -> SodaFixedTimestamp,
     "array" -> SodaArray,
     "object" -> SodaObject,
