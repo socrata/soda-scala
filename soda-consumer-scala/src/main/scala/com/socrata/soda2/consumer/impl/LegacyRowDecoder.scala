@@ -50,7 +50,7 @@ private[consumer] object LegacyRowDecoder {
     "date" -> k(SodaFixedTimestamp),
     "calendar_date" -> k(SodaFloatingTimestamp),
     "location" -> k(SodaLocation),
-    "url" -> k(SodaObject),
+    "url" -> k(SodaUrl),
     "email" -> k(SodaString),
     "checkbox" -> k(SodaBoolean),
     "flag" -> k(SodaString),
