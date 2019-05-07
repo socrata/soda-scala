@@ -186,6 +186,34 @@ case object SodaLocation extends SodaType with ((Option[String], Option[String],
   override def toString = "SodaLocation"
 }
 
+case class SodaUrl(url: String, description: Option[String]) extends SodaValue {
+  type ValueType = SodaUrl
+  def sodaType = SodaUrl
+  def asJson = SodaUrl.jsonCodec.encode(this)
+  def value = this
+}
+
+case object SodaUrl extends SodaType with ((String, Option[String]) => SodaUrl) {
+  private val url = Variable[String]
+  private val description = Variable[String]
+  private val Pattern = PObject(
+    "url" -> url,
+    "description" -> POption(description).orNull)
+
+  implicit val jsonCodec = new JsonCodec[SodaUrl] {
+    def encode(x: SodaUrl) =
+      Pattern.generate(url := x.url, description :=? x.description)
+
+    def decode(v: JValue) = Pattern.matches(v).map { results =>
+      SodaUrl(url(results), description.get(results))
+    }
+  }
+
+  def convertFrom(value: JValue) = JsonCodec[SodaUrl].decode(value)
+
+  override def toString = "SodaUrl"
+}
+
 case class SodaBoolean(value: Boolean) extends SodaValue {
   type ValueType = Boolean
   def sodaType = SodaBoolean
