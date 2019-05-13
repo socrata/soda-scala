@@ -85,10 +85,10 @@ object RowDecoder {
     "array" -> SodaArray,
     "object" -> SodaObject,
     "point" -> SodaPoint,
-    "multi_point" -> SodaMultiPoint,
-    "line_string" -> SodaLineString,
-    "multi_line_string" -> SodaMultiLineString,
+    "multipoint" -> SodaMultiPoint,
+    "line" -> SodaLineString,
+    "multiline" -> SodaMultiLineString,
     "polygon" -> SodaPolygon,
-    "multi_polygon" -> SodaMultiPolygon
+    "multipolygon" -> SodaMultiPolygon
   )
 }
