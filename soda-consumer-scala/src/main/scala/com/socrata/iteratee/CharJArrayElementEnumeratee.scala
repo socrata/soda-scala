@@ -2,10 +2,10 @@ package com.socrata.iteratee
 
 import scala.annotation.tailrec
 
-import com.rojoma.json
-import json.ast._
-import json.util.{JArrayProducer, WrappedCharArray}
-import json.io.JsonReaderException
+import com.rojoma.json.v3
+import com.rojoma.json.v3.ast._
+import com.rojoma.json.v3.util.{JArrayProducer, WrappedCharArray}
+import com.rojoma.json.v3.io.JsonReaderException
 
 /** An Enumeratee which reads the elements out of a character stream representing a JSON array
  * and passes them down to a secondary [[com.socrata.iteratee.Iteratee]], throwing exceptions
@@ -15,8 +15,8 @@ class CharJArrayElementEnumeratee[T](arrayProducer: JArrayProducer, iteratee: It
   /** Constructs a new `CharJArrayElementEnumeratee` with the given secondary iterator to receive the
    * array's elements.
    *
-   * @param iteratee An iteratee that will receive a stream of [[com.rojoma.json.ast.JValue]]s to produce the result. */
-  def this(iteratee: Iteratee[JValue, T], onDecodeError: JsonReaderException => T) = this(JArrayProducer.newProducer, iteratee, onDecodeError)
+   * @param iteratee An iteratee that will receive a stream of [[com.rojoma.json.v3.ast.JValue]]s to produce the result. */
+  def this(iteratee: Iteratee[JValue, T], onDecodeError: JsonReaderException => T) = this(new JArrayProducer.Builder().build, iteratee, onDecodeError)
 
   private def handleError[A](action: => A): Either[A, T] =
     try {

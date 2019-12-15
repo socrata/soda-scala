@@ -1,6 +1,6 @@
 package com.socrata.soda2.consumer
 
-import com.rojoma.json.ast._
+import com.rojoma.json.v3.ast._
 
 import com.socrata.iteratee.Iteratee
 

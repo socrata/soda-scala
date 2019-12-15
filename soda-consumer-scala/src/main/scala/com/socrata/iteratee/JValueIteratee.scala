@@ -1,7 +1,7 @@
 package com.socrata.iteratee
 
-import com.rojoma.json.io.JsonReaderException
-import com.rojoma.json.ast.JValue
+import com.rojoma.json.v3.io.JsonReaderException
+import com.rojoma.json.v3.ast.JValue
 
 /** Returns the first complete JSON value that can be read from a character
  *stream. */

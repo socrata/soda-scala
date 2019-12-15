@@ -1,6 +1,6 @@
 package com.socrata.soda2.publisher
 
-import com.rojoma.json.util.{SimpleJsonCodecBuilder, SimpleHierarchyCodecBuilder, NoTag}
+import com.rojoma.json.v3.util.{SimpleJsonCodecBuilder, SimpleHierarchyCodecBuilder, NoTag}
 
 sealed abstract class UpsertResponse {
   def created: Int

@@ -1,7 +1,7 @@
 package com.socrata.soda2.publisher
 package impl
 
-import com.rojoma.json.ast.{JString, JObject, JValue}
+import com.rojoma.json.v3.ast.{JString, JObject, JValue}
 
 import com.socrata.iteratee.Iteratee
 import com.socrata.soda2.{InvalidResponseJsonException, MalformedResponseJsonException, Resource}

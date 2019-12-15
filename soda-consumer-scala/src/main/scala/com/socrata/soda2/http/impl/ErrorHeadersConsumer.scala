@@ -1,15 +1,13 @@
 package com.socrata.soda2.http
 package impl
 
-import com.rojoma.json.ast.JObject
-import com.rojoma.json.util.SimpleJsonCodecBuilder
-import com.rojoma.json.codec.JsonCodec
-
+import com.rojoma.json.v3.ast.JObject
+import com.rojoma.json.v3.util.{SimpleJsonCodecBuilder}
+import com.rojoma.json.v3.codec.JsonDecode
 import com.socrata.soda2.exceptions.soda1.Soda1Exception
 import com.socrata.soda2.exceptions.ServerException
-import com.socrata.http.{BodyConsumer, HeadersConsumer, Headers}
-import com.socrata.soda2.{Resource, InvalidResponseJsonException}
-
+import com.socrata.http.{BodyConsumer, Headers, HeadersConsumer}
+import com.socrata.soda2.{InvalidResponseJsonException, Resource}
 import HeadersConsumerUtils._
 
 private[http] class ErrorHeadersConsumer(resource: Resource, code: Int) extends HeadersConsumer[Nothing] {
@@ -34,10 +32,10 @@ private[http] object ErrorHeadersConsumer {
     "data", _.data)
 
   def processError(errorObject: JObject): Nothing = {
-    JsonCodec.fromJValue[Error](errorObject) match {
-      case Some(Error(code, message, data)) =>
+    JsonDecode.fromJValue[Error](errorObject) match {
+      case Right(Error(code, message, data)) =>
         throw ServerException(code, message, data)
-      case None =>
+      case Left(_) =>
         badErrorBody(errorObject)
     }
   }
@@ -46,10 +44,10 @@ private[http] object ErrorHeadersConsumer {
   implicit val legacyCodec = SimpleJsonCodecBuilder[LegacyError].build("code", _.code, "message", _.message)
 
   def processLegacyError(resource: Resource, status: Int, errorObject: JObject): Nothing = {
-    JsonCodec.fromJValue[LegacyError](errorObject) match {
-      case Some(LegacyError(code, message)) =>
+    JsonDecode.fromJValue[LegacyError](errorObject) match {
+      case Right(LegacyError(code, message)) =>
         throw Soda1Exception(resource, status, code.getOrElse("internal error"), message)
-      case None =>
+      case Left(_) =>
         badErrorBody(errorObject)
     }
   }

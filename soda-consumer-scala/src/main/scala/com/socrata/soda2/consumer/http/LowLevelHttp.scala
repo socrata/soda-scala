@@ -1,19 +1,17 @@
 package com.socrata.soda2.consumer.http
 
 import scala.concurrent.duration._
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.collection.JavaConverters._
 import scala.io.Codec
-
 import java.net.{URI, URL}
 
 import com.ning.http.client.AsyncHttpClient
-import com.rojoma.json.ast.{JValue, JObject}
-
+import com.rojoma.json.v3.ast.{JNumber, JObject, JValue}
 import com.socrata.soda2.consumer.LowLevel
 import com.socrata.soda2.consumer.impl.ResultProducer
 import com.socrata.soda2.http._
-import com.socrata.http.{JsonEntityWriter, Authorization, Headers}
+import com.socrata.http.{Authorization, Headers, JsonEntityWriter}
 import com.socrata.http.implicits._
 import com.socrata.iteratee.CharIteratee
 import com.socrata.soda2.{Resource, Soda2Metadata}
@@ -32,7 +30,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val logicalHost: String, val phy
 
   def get[T](uri: URI, originalResource: Resource, queryParameters: Option[Map[String, Seq[String]]], progressCallback: JObject => Unit, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] = {
     log.debug("Making GET request to {}", uri)
-    queryParameters.foreach{ p => log.debug("With query parameters {}", com.rojoma.json.util.JsonUtil.renderJson(p)) }
+    queryParameters.foreach{ p => log.debug("With query parameters {}", com.rojoma.json.v3.util.JsonUtil.renderJson(p)) }
     client.prepareGet(uri.toURL.toString).
       maybeSetQueryParametersS(queryParameters).
       setFollowRedirects(true).
@@ -46,7 +44,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val logicalHost: String, val phy
 
   def postForm[T](uri: URI, originalResource: Resource, formParameters: Option[Map[String, Seq[String]]], progressCallback: JObject => Unit, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] = {
     log.debug("Making POST request to {}", uri)
-    formParameters.foreach{ p => log.debug("With form parameters {}", com.rojoma.json.util.JsonUtil.renderJson(p)) }
+    formParameters.foreach{ p => log.debug("With form parameters {}", com.rojoma.json.v3.util.JsonUtil.renderJson(p)) }
     client.preparePost(uri.toString).
       maybeSetParametersS(formParameters).
       setFollowRedirects(true).
@@ -72,7 +70,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val logicalHost: String, val phy
 
   def postPutJson[T](builder: AsyncHttpClient#BoundRequestBuilder, isPost: Boolean, uri: URI, originalResource: Resource, queryParameters: Option[Map[String, Seq[String]]], body: JValue, progressCallback: JObject => Unit, iteratee: (URI, Soda2Metadata) => CharIteratee[T]): Future[T] = {
     log.debug("Making JSON {} request to {}", (if(isPost) "POST" else "PUT"), uri)
-    queryParameters.foreach{ p => log.debug("With query parameters {}", com.rojoma.json.util.JsonUtil.renderJson(p)) }
+    queryParameters.foreach{ p => log.debug("With query parameters {}", com.rojoma.json.v3.util.JsonUtil.renderJson(p)) }
     builder.
       maybeSetQueryParametersS(queryParameters).
       setFollowRedirects(true).
@@ -172,7 +170,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val logicalHost: String, val phy
 
   // uggggghh.  I hate SODA1.
   def awaitNoPendingGeocodesFor(resource: Resource, progressCallback: JObject => Unit): Future[Unit] = {
-    import com.rojoma.json.ast._
+    import com.rojoma.json.v3.ast._
     import com.socrata.iteratee.JValueIteratee
     import com.socrata.soda2.{InvalidResponseJsonException, MalformedResponseJsonException}
     val jValue = get(
@@ -182,10 +180,10 @@ class LowLevelHttp(val client: AsyncHttpClient, val logicalHost: String, val phy
     jValue.flatMap {
       case obj: JObject =>
         obj.get("view") match {
-          case Some(JNumber(n)) if n == BigDecimal(0) =>
+          case Some(n: JNumber) if n == BigDecimal(0) =>
             log.debug("No pending geocodes; the publish can proceed")
             Future.successful(())
-          case Some(JNumber(n)) =>
+          case Some(n: JNumber) =>
             log.debug("There are still {} pending geocodes; sleeping for 60s", n)
             progressCallback(obj)
             timer.in(60.seconds) {

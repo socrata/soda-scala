@@ -2,7 +2,7 @@ package com.socrata.soda2.publisher
 
 import scala.concurrent.Future
 
-import com.rojoma.json.ast._
+import com.rojoma.json.v3.ast._
 
 import com.socrata.soda2.consumer.{JValueRowEnumeratee, Row, Consumer}
 import com.socrata.soda2.values.SodaValue

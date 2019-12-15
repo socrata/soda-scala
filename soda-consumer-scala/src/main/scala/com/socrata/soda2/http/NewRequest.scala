@@ -1,6 +1,6 @@
 package com.socrata.soda2.http
 
-import com.rojoma.json.ast.JObject
+import com.rojoma.json.v3.ast.JObject
 
 /** High-level instructions for handling making multiple requests to produce the
  * result from a long-running server-side process. */
@@ -8,7 +8,7 @@ sealed abstract class NewRequest {
   /** The number of seconds the client should wait before issuing its new request. */
   def retryAfter: Int
 
-  /** A [[com.rojoma.json.ast.JObject]] representing progress or status information.
+  /** A [[com.rojoma.json.v3.ast.JObject]] representing progress or status information.
    * Most responses will contain at least the field "message". */
   def details: JObject
 }

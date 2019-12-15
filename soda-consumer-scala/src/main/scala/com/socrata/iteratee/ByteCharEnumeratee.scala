@@ -6,7 +6,7 @@ import java.nio.{CharBuffer, ByteBuffer}
 import java.nio.charset.CoderResult
 import java.nio.charset.CharsetDecoder
 
-import com.rojoma.json.util.WrappedCharArray
+import com.rojoma.json.v3.util.WrappedCharArray
 
 /** An Enumeratee which reads character data out of a byte stream and passes them down in chunks to a
  * secondary [[com.socrata.iteratee.Iteratee]].

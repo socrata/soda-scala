@@ -3,8 +3,8 @@ package impl
 
 import java.net.URI
 
-import com.rojoma.json.ast.{JObject, _}
-import com.rojoma.json.io.{JsonReader, JsonReaderException}
+import com.rojoma.json.v3.ast.{JNumber, JObject, _}
+import com.rojoma.json.v3.io.{JsonReader, JsonReaderException}
 import com.socrata.soda2.ColumnName
 import com.socrata.soda2.values._
 import org.joda.time.format.ISODateTimeFormat
@@ -101,13 +101,13 @@ private[consumer] object LegacyRowDecoder {
 
   def metadata2thing(fieldName: String, uri: URI, value: JValue): JValue = fieldName match {
     case ":id" => value match {
-      case JNumber(x) => JString(x.toString)
+      case x: JNumber => JString(x.toString)
       case JNull => JNull
       case _ => sys.error("nyi")
     }
     case ":created_at" => epoch2iso(fieldName, uri, value)
     case ":position" => value match {
-      case JNumber(x) => JString(x.toString)
+      case x: JNumber => JString(x.toString)
       case JNull => JNull
       case _ => sys.error("nyi")
     }
@@ -119,14 +119,14 @@ private[consumer] object LegacyRowDecoder {
   }
 
   def stars2num(fieldName: String, uri: URI, value: JValue): JValue = value match {
-    case JNumber(n) => JString(n.toString)
+    case n: JNumber => JString(n.toString)
     case JString(s) => JString(s) // already converted
     case _ => sys.error("NYI")
   }
 
   def numberify(value: JValue) = value match {
-    case JNumber(n) =>
-      JNumber(n)
+    case n: JNumber =>
+      n
     case JString(n) =>
       try {
         JNumber(BigDecimal(n))
