@@ -180,7 +180,7 @@ class LowLevelHttp(val client: AsyncHttpClient, val logicalHost: String, val phy
     jValue.flatMap {
       case obj: JObject =>
         obj.get("view") match {
-          case Some(n: JNumber) if n == BigDecimal(0) =>
+          case Some(n: JNumber) if n.toBigDecimal == BigDecimal(0) =>
             log.debug("No pending geocodes; the publish can proceed")
             Future.successful(())
           case Some(n: JNumber) =>
