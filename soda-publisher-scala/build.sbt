@@ -1,0 +1,1 @@
+name := "soda-publisher-scala"
