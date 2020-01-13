@@ -3,7 +3,7 @@ package impl
 
 import java.net.URI
 
-import com.rojoma.json.ast.{JString, JObject}
+import com.rojoma.json.v3.ast.{JString, JObject}
 
 import com.socrata.soda2.{UnknownTypeException, ColumnNameLike, ColumnName}
 import com.socrata.soda2.values._
@@ -89,6 +89,8 @@ object RowDecoder {
     "line" -> SodaLineString,
     "multiline" -> SodaMultiLineString,
     "polygon" -> SodaPolygon,
-    "multipolygon" -> SodaMultiPolygon
+    "multipolygon" -> SodaMultiPolygon,
+    "photo" -> SodaPhoto,
+    "document" -> SodaDocument
   )
 }

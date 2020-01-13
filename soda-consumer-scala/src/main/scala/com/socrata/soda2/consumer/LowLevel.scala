@@ -2,7 +2,7 @@ package com.socrata.soda2.consumer
 
 import java.net.URI
 
-import com.rojoma.json.ast.JValue
+import com.rojoma.json.v3.ast.JValue
 
 import com.socrata.soda2.consumer.impl.QueryDisambiguator
 import com.socrata.iteratee.CharIteratee

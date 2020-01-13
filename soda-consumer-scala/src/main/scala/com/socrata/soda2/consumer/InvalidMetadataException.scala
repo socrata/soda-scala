@@ -1,6 +1,6 @@
 package com.socrata.soda2.consumer
 
-import com.rojoma.json.ast.JString
+import com.rojoma.json.v3.ast.JString
 
 import com.socrata.soda2.SodaProtocolException
 

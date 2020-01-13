@@ -5,9 +5,9 @@ import scala.concurrent.Future
 
 import java.net.URI
 
-import com.rojoma.json.ast.{JObject, JString}
-import com.rojoma.json.util.JsonUtil
-import com.rojoma.json.io.JsonReaderException
+import com.rojoma.json.v3.ast.{JObject, JString}
+import com.rojoma.json.v3.util.JsonUtil
+import com.rojoma.json.v3.io.JsonReaderException
 
 import com.socrata.soda2.{ColumnName, Soda2Metadata}
 import com.socrata.iteratee._
@@ -63,7 +63,7 @@ object QueryRunner {
     def extractStrings(field: String): Seq[String] = {
       val jvalue = try { JsonUtil.parseJson[Seq[String]](metadata.getOrElse(field, throw new MissingMetadataField(field))) }
                    catch { case e: JsonReaderException => throw new MalformedMetadataField(field, "unable to parse as JSON", e) }
-      jvalue.getOrElse(throw new MalformedMetadataField(field, "not a list of strings"))
+      jvalue.right.getOrElse(throw new MalformedMetadataField(field, "not a list of strings"))
     }
     val fields = extractStrings("fields")
     val types = extractStrings("types")

@@ -1,6 +1,6 @@
 package com.socrata.soda2
 
-import com.rojoma.json.ast.JValue
+import com.rojoma.json.v3.ast.JValue
 
 /** Thrown if a response is a valid JSON datum, but cannot be interpreted according to the
  * SODA2 specification. */

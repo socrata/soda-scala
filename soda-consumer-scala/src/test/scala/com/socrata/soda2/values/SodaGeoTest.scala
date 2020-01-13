@@ -5,7 +5,7 @@ import org.scalacheck.Arbitrary._
 import org.scalatest.prop.GeneratorDrivenPropertyChecks
 import org.scalatest.{MustMatchers, OptionValues, WordSpec}
 
-import com.rojoma.json.io.JsonReader
+import com.rojoma.json.v3.io.JsonReader
 
 class SodaGeoTest extends WordSpec with MustMatchers with GeneratorDrivenPropertyChecks with OptionValues {
   implicit val arbitraryPoint: Arbitrary[SodaPoint] = Arbitrary {

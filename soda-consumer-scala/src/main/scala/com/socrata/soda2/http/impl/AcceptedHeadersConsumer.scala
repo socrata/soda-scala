@@ -1,7 +1,7 @@
 package com.socrata.soda2.http
 package impl
 
-import com.rojoma.json.ast.{JString, JObject, JValue}
+import com.rojoma.json.v3.ast.{JString, JObject, JValue}
 
 import com.socrata.http.{BodyConsumer, HeadersConsumer, Headers}
 

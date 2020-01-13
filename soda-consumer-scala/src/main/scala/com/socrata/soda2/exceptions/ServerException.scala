@@ -1,6 +1,6 @@
 package com.socrata.soda2.exceptions
 
-import com.rojoma.json.ast.JObject
+import com.rojoma.json.v3.ast.JObject
 
 import com.socrata.soda2.SodaException
 

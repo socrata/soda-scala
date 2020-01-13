@@ -1,6 +1,6 @@
 package com.socrata.soda2.consumer
 
-import com.rojoma.json.ast.{JObject, JValue}
+import com.rojoma.json.v3.ast.{JObject, JValue}
 import com.socrata.soda2.{ColumnName, ColumnNameLike}
 import com.socrata.soda2.values.{SodaType, SodaValue}
 

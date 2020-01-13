@@ -2,7 +2,7 @@ package com.socrata.soda2.consumer.impl
 
 import java.net.URI
 
-import com.rojoma.json.ast._
+import com.rojoma.json.v3.ast._
 import com.socrata.soda2.ColumnName
 import org.scalatest.{MustMatchers, WordSpec}
 

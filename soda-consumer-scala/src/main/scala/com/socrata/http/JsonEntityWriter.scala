@@ -3,8 +3,8 @@ package com.socrata.http
 import java.io.{OutputStreamWriter, OutputStream}
 
 import com.ning.http.client.Request
-import com.rojoma.json.ast.JValue
-import com.rojoma.json.util.JsonUtil
+import com.rojoma.json.v3.ast.JValue
+import com.rojoma.json.v3.util.JsonUtil
 
 class JsonEntityWriter(body: JValue, pretty: Boolean = false) extends Request.EntityWriter {
   def writeEntity(out: OutputStream) {
