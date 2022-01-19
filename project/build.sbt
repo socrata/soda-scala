@@ -1,6 +1,6 @@
 resolvers ++= Seq(
-  "Socrata Artifactory" at "http://repo.socrata.com/artifactory/libs-release",
-  "DiversIT repo" at "http://repository-diversit.forge.cloudbees.com/release"
+  "Socrata Artifactory" at "https://repo.socrata.com/artifactory/libs-release",
+  "DiversIT repo" at "https://repository-diversit.forge.cloudbees.com/release"
 )
 
 //addSbtPlugin("com.socrata" % "socrata-cloudbees-sbt" % "1.0.0")
