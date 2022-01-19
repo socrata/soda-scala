@@ -1,10 +1,10 @@
 ThisBuild / organization := "com.socrata"
 
-ThisBuild / version := "2.2.0"
+ThisBuild / version := "2.2.1"
 
-ThisBuild / scalaVersion := "2.10.4"
+ThisBuild / scalaVersion := "2.12.10"
 
-ThisBuild / crossScalaVersions := Seq(scalaVersion.value, "2.11.8", "2.12.0")
+ThisBuild / crossScalaVersions := Seq(scalaVersion.value, "2.10.4", "2.11.8")
 
 // random stuff Sonatype wants
 ThisBuild / pomExtra := (
