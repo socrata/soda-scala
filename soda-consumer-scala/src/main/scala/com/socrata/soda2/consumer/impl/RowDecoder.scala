@@ -80,6 +80,7 @@ object RowDecoder {
     "boolean" -> SodaBoolean,
     "calendar_date" -> SodaFloatingTimestamp, // old name
     "floating_timestamp" -> SodaFloatingTimestamp,
+    "date" -> SodaFixedTimestamp, // old name
     "fixed_timestamp" -> SodaFixedTimestamp,
     "url" -> SodaUrl,
     "array" -> SodaArray,
